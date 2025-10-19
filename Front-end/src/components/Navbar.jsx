@@ -33,7 +33,7 @@ const Navbar = () => {
     }
 
     return (
-        <header className="bg-white shadow-sm px-4 md:px-10 py-3 relative z-50">
+        <header className="bg-white shadow-sm px-4 md:px-10 py-3 z-50 fixed top-0 left-0 right-0 ">
             <div className="flex justify-between items-center">
                 {/* Logo */}
                 <Link to="/" className="relative inline-block">
