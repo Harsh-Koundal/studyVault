@@ -380,10 +380,6 @@ const Dashboard = () => {
 
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-md">
         <div className="h-32 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 relative">
-          <button className="absolute top-3 right-3 bg-white/20 text-white px-3 py-1 rounded-md text-sm hover:bg-white/30 transition">
-            <Camera className="w-4 h-4 inline mr-1" />
-            Change Cover
-          </button>
         </div>
 
         <div className="px-6 pb-6 -mt-12">
@@ -392,19 +388,16 @@ const Dashboard = () => {
               <div className="w-28 h-28 bg-white border-4 border-white rounded-xl flex items-center justify-center shadow-md">
                 <User className="w-14 h-14 text-blue-600" />
               </div>
-              <button className="absolute bottom-1 right-1 w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white hover:bg-blue-700 transition">
-                <Camera className="w-4 h-4" />
-              </button>
             </div>
 
-            <div className="flex-1 mt-14">
+            <div className="flex-1">
               {isEditing ? (
                 <>
                   <input
                     type="text"
                     value={user.name}
                     onChange={(e) => setUser({ ...user, name: e.target.value })}
-                    className="text-2xl font-bold text-gray-900 mb-1 border-b border-gray-300 focus:outline-none w-full"
+                    className="text-2xl font-bold text-gray-900 mb-1 border-b border-gray-300 focus:outline-none w-full mt-14"
                   />
                   <input
                     type="text"

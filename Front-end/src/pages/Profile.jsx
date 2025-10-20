@@ -45,14 +45,14 @@ const Profile = () => {
               </div>
             </div>
 
-            <div className="flex-1 mt-14">
+            <div className="flex-1 ">
               {isEditing ? (
                 <>
                   <input
                     type="text"
                     value={user.name}
                     onChange={(e) => setUser({ ...user, name: e.target.value })}
-                    className="text-2xl font-bold text-gray-900 mb-1 border-b border-gray-300 focus:outline-none w-full"
+                    className="text-2xl font-bold text-gray-900 mb-1 border-b border-gray-300 focus:outline-none w-full mt-14"
                   />
                   <input
                     type="text"
