@@ -6,6 +6,8 @@ import Footer from './components/Footer.jsx'
 import { ScrollTop } from './components/Scroll.js'
 import Login from './pages/Login.jsx'
 import Dashboard from './pages/Dashboard.jsx'
+import UploadPage from './pages/Upload.jsx'
+import Profile from './pages/Profile.jsx'
 function App() {
   return (
     <Router>
@@ -15,6 +17,8 @@ function App() {
         <Route path='/' element={<Home/>}/>
         <Route path='/login' element={<Login/>}/>
         <Route path='/dashboard' element={<Dashboard/>}/>
+        <Route path='/upload' element={<UploadPage/>}/>
+        <Route path='/profile' element={<Profile/>}/>
       </Routes>
       <Footer/>
     </Router>
