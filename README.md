@@ -33,3 +33,5 @@ Built with **React + Node.js + MongoDB**, it delivers a **modern UI**, **secure 
 | **File Uploads** | Multer / Cloudinary (optional) | Handles file storage |
 
 ---
+
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/Harsh-Koundal/studyVault?utm_source=oss&utm_medium=github&utm_campaign=Harsh-Koundal%2FstudyVault&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
