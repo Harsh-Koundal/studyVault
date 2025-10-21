@@ -7,7 +7,6 @@ import {
   Phone, Github
 } from 'lucide-react';
 
-// StatCard component - moved outside to prevent re-creation
 const StatCard = ({ icon, label, value, color }) => {
   const colors = {
     blue: "from-blue-50 to-blue-100 border-blue-200 text-blue-600",
@@ -574,10 +573,6 @@ const Dashboard = () => {
             <div className="absolute inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} />
             <div className="relative w-72 max-w-full bg-white h-full p-4 overflow-auto">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold">N</div>
-                  <span className="font-semibold">NerathiX</span>
-                </div>
                 <button onClick={() => setSidebarOpen(false)} className="p-2">
                   <X className="w-5 h-5" />
                 </button>
@@ -599,7 +594,7 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-        )}
+        )} 
 
         <main className="flex-1 mt-14">
           {activeTab === 'Dashboard' && renderDashboardContent()}
@@ -612,7 +607,7 @@ const Dashboard = () => {
         <div className="bg-white border border-gray-200 rounded-full px-3 py-2 shadow-lg flex items-center gap-3">
           <button className="p-2 rounded-lg text-gray-600" onClick={() => setActiveTab('Dashboard')} aria-label="Home"><Home className="w-5 h-5" /></button>
           <button className="p-2 rounded-lg text-gray-600" onClick={() => setActiveTab('Popular')} aria-label="Popular"><TrendingUp className="w-5 h-5" /></button>
-          <button className="p-2 rounded-lg text-gray-600" onClick={() => setUploadModal(true)} aria-label="Upload"><Upload className="w-5 h-5" /></button>
+          <button className="p-2 rounded-lg text-gray-600" onClick={() => setActiveTab('My Uploads')} aria-label="Upload"><Upload className="w-5 h-5" /></button>
           <button className="p-2 rounded-lg text-gray-600" onClick={() => setActiveTab('Favorites')} aria-label="Favorites"><Heart className="w-5 h-5" /></button>
           <button className="p-2 rounded-lg text-gray-600" onClick={() => setActiveTab('Profile')} aria-label="Profile"><User className="w-5 h-5" /></button>
         </div>
