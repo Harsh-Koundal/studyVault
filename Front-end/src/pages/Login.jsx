@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Shield, Zap, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/logo.png';
+import axios from 'axios'
+import toast, {Toaster} from 'react-hot-toast'
 
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
+  const [userData, setUserData] = useState({
     fullName: '',
     email: '',
     password: '',
@@ -14,14 +16,48 @@ const LoginPage = () => {
   });
 
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
+    setUserData({
+      ...userData,
       [e.target.name]: e.target.value
     });
   };
 
-  const handleSubmit = () => {
-    console.log('Form submitted:', formData);
+
+  const handleSubmit = async(e) => {
+    e.preventDefault();
+    if(!isLogin && userData.password !== userData.confirmPassword){
+      toast.error("Passwords do not match!");
+      return;
+    }
+
+    try{
+      if(isLogin){
+        const res = await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/auth/signin`,{
+          email:userData.email,
+          password:userData.password,
+        },{
+          headers:{"Content-Type":"application/json"},
+          withCredentials:true,
+        });
+        localStorage.setItem("token",res.data.token);
+        toast.success("Logged in successfully!");
+      }else{
+        const res = await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/auth/signup`,{
+          name: userData.fullName,
+          email:userData.email,
+          password:userData.password,
+        },{
+          headers:{"Content-Type":"application/json"},
+          withCredentials:true,
+        });
+        toast.success("Registered successfully! Check your email.")
+      }
+    }catch(err){
+      console.log()
+      console.error(err);
+      const msg = err.response?.data?.msg || err.message || "Something went wrong!";
+      toast.error(msg)
+    }
   };
 
   const features = [
@@ -45,6 +81,7 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 via-blue-100 to-pink-100 flex items-center justify-center p-4 mt-16">
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+        <Toaster position="top-right" reverseOrder={true} />
         {/* Left Section - Info (Hidden on mobile) */}
         <motion.div
           className="hidden lg:block space-y-8"
@@ -179,7 +216,7 @@ const LoginPage = () => {
                   <input
                     type="text"
                     name="fullName"
-                    value={formData.fullName}
+                    value={userData.fullName}
                     onChange={handleInputChange}
                     placeholder="John Doe"
                     className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-600 transition-colors"
@@ -198,7 +235,7 @@ const LoginPage = () => {
                 <input
                   type="email"
                   name="email"
-                  value={formData.email}
+                  value={userData.email}
                   onChange={handleInputChange}
                   placeholder="you@example.com"
                   className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-600 transition-colors"
@@ -216,7 +253,7 @@ const LoginPage = () => {
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
-                  value={formData.password}
+                  value={userData.password}
                   onChange={handleInputChange}
                   placeholder="••••••••"
                   className="w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-600 transition-colors"
@@ -242,7 +279,7 @@ const LoginPage = () => {
                   <input
                     type={showPassword ? "text" : "password"}
                     name="confirmPassword"
-                    value={formData.confirmPassword}
+                    value={userData.confirmPassword}
                     onChange={handleInputChange}
                     placeholder="••••••••"
                     className="w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-600 transition-colors"
