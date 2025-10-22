@@ -4,13 +4,14 @@ import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import VerificationToken from '../model/verificationToken.js';
+import Profile from '../model/Profile.js';
 
 // 🔹 SIGN IN
 export const signin = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ msg: "User not found" });
+    if (!user) return res.status(400).json({ msg: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
@@ -59,6 +60,14 @@ export const signup = async (req, res) => {
       password: hashedPassword,
       verified: false
     });
+
+    // create profile
+    const profile = await Profile.create({
+      userId:user._id,
+      fullName:name,
+      email,
+      password:hashedPassword,
+    })
 
     // 4️⃣ Create email verification token
     const token = crypto.randomBytes(32).toString("hex");

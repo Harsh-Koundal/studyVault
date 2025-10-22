@@ -43,11 +43,16 @@ const LoginPage = () => {
         });
         localStorage.setItem("token", res.data.token);
 
-        // Dispatch a global login event
         window.dispatchEvent(new Event("login"));
 
-        toast.success("Logged in successfully!");
-        nevigate("/");
+        toast.success("Logged in successfully!", {
+          duration: 2000, 
+          position: 'top-right',
+        });
+        setTimeout(() => {
+          nevigate("/");
+        }, 500); 
+
       }
       else {
         const res = await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/auth/signup`, {
