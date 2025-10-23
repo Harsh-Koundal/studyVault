@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Home, TrendingUp, Star, Upload, User, Search, Grid, List,
@@ -6,6 +6,9 @@ import {
   Mail, Award, Settings, Camera, MapPin,
   Phone, Github
 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import axios from 'axios';
+
 
 const StatCard = ({ icon, label, value, color }) => {
   const colors = {
@@ -41,17 +44,77 @@ const Dashboard = () => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [user, setUser] = useState({
-    name: "Harsh Koundal",
-    course: "B.Tech Computer Science - 3rd Year",
-    location: "Baddi, Himachal Pradesh, India",
-    email: "harsh@example.com",
-    phone: "+91 98765 43210",
-    github: "github.com/harsh",
-    about: "Passionate computer science student interested in data structures, algorithms, and software development. Love sharing knowledge and helping fellow students."
+    fullName: "",
+    stream: "",
+    address: "",
+    email: "",
+    contactNumber: "",
+    github: "",
+    about: ""
   });
 
   const handleEdit = () => setIsEditing(true);
-  const handleSave = () => setIsEditing(false);
+ const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Unauthorized");
+
+      await axios.put(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/profile`, user,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Profile updated successfully!");
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Faild to update profile:", err);
+      toast.error("Failed to update profile. Try again");
+    }
+  };
+
+  useEffect(() => {
+    const fetchProfile = async() =>{
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      const res = await axios.get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/profile`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const profile = res.data;
+      if (!profile || !profile.email) {
+        toast.error("Invalid profile data. Please login again.");
+        localStorage.removeItem("token");
+        navigate('/login');
+        return
+      }
+      setUser({
+        fullName: profile.fullName || "",
+        email: profile.email,
+        contactNumber: profile.contactNumber || "",
+        address: profile.address || "",
+        about: profile.about || "",
+        github: profile.github || "",
+        stream: profile.stream || ""
+      });
+      console.log("profileData:",res.data)
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+      if (err.response?.status === 401) {
+          toast.error("Session expired. Please login again.");
+          localStorage.removeItem("token");
+          navigate("/login");
+        } else if (err.response?.status === 404) {
+          toast.error("User profile not found.");
+          localStorage.removeItem("token");
+          navigate("/login");
+        } else {
+          toast.error("Failed to load profile. Please try again.");
+        }
+      }
+    }
+    fetchProfile();
+  }, [navigate])
 
   const [studyMaterials, setStudyMaterials] = useState([
     {
@@ -394,29 +457,29 @@ const Dashboard = () => {
                 <>
                   <input
                     type="text"
-                    value={user.name}
-                    onChange={(e) => setUser({ ...user, name: e.target.value })}
+                    value={user.fullName}
+                    onChange={(e) => setUser({ ...user, fullName: e.target.value })}
                     className="text-2xl font-bold text-gray-900 mb-1 border-b border-gray-300 focus:outline-none w-full mt-14"
                   />
                   <input
                     type="text"
-                    value={user.course}
-                    onChange={(e) => setUser({ ...user, course: e.target.value })}
+                    value={user.stream}
+                    onChange={(e) => setUser({ ...user, stream: e.target.value })}
                     className="text-gray-600 text-sm border-b border-gray-300 focus:outline-none w-full"
                   />
                 </>
               ) : (
                 <>
                   <h2 className="text-2xl font-bold text-gray-900 mb-1 mt-14">
-                    {user.name}
+                    {user.fullName}
                   </h2>
-                  <p className="text-gray-600 text-sm">{user.course}</p>
+                  <p className="text-gray-600 text-sm">{user.stream}</p>
                 </>
               )}
 
               <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
                 <MapPin className="w-4 h-4" />
-                {user.location}
+                {user.address}
               </div>
             </div>
 
@@ -436,8 +499,8 @@ const Dashboard = () => {
                   <label className="block text-sm text-gray-500 mb-1">Location</label>
                   <input
                     type="text"
-                    value={user.location}
-                    onChange={(e) => setUser({ ...user, location: e.target.value })}
+                    value={user.address}
+                    onChange={(e) => setUser({ ...user, address: e.target.value })}
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
@@ -445,8 +508,8 @@ const Dashboard = () => {
                   <label className="block text-sm text-gray-500 mb-1">Phone</label>
                   <input
                     type="text"
-                    value={user.phone}
-                    onChange={(e) => setUser({ ...user, phone: e.target.value })}
+                    value={user.contactNumber}
+                    onChange={(e) => setUser({ ...user, contactNumber: e.target.value })}
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
@@ -489,7 +552,7 @@ const Dashboard = () => {
             <StatCard
               icon={<Upload className="w-4 h-4 text-blue-600" />}
               label="Uploads"
-              value={studyMaterials.filter((m) => m.author === user.name).length}
+              value={studyMaterials.filter((m) => m.author === user.fullName).length}
               color="blue"
             />
             <StatCard
@@ -524,7 +587,7 @@ const Dashboard = () => {
           <h3 className="font-semibold text-lg mb-3">Contact</h3>
           <div className="text-sm text-gray-600 space-y-2">
             <p className="flex items-center gap-2">
-              <Phone className="w-4 h-4" /> {user.phone}
+              <Phone className="w-4 h-4" /> {user.contactNumber}
             </p>
             <p className="flex items-center gap-2">
               <Mail className="w-4 h-4" /> {user.email}
@@ -603,8 +666,8 @@ const Dashboard = () => {
         </main>
       </div>
 
-      <nav className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40 md:hidden">
-        <div className="bg-white border border-gray-200 rounded-full px-3 py-2 shadow-lg flex items-center gap-3">
+      <nav className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40 lg:hidden">
+        <div className="bg-white border border-gray-200 rounded-full px-3 py-2 shadow-lg flex items-center gap-4">
           <button className="p-2 rounded-lg text-gray-600" onClick={() => setActiveTab('Dashboard')} aria-label="Home"><Home className="w-5 h-5" /></button>
           <button className="p-2 rounded-lg text-gray-600" onClick={() => setActiveTab('Popular')} aria-label="Popular"><TrendingUp className="w-5 h-5" /></button>
           <button className="p-2 rounded-lg text-gray-600" onClick={() => setActiveTab('My Uploads')} aria-label="Upload"><Upload className="w-5 h-5" /></button>

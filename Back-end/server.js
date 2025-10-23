@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 
 import authRoutes from './routes/authRoutes.js'
 import profileRoutes from './routes/profileRoutes.js'
+import materialRoutes from './routes/materialRoutes.js'
 
 dotenv.config();
 
@@ -58,6 +59,7 @@ mongoose.connect(MONGODB_URI, {
 // Routes
 app.use('/api/auth',authRoutes)
 app.use('/api/profile',profileRoutes)
+app.use('/api/materials',materialRoutes)
 
 
 
