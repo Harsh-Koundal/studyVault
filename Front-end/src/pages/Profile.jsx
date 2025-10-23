@@ -65,8 +65,8 @@ const Profile = () => {
       const profile = res.data;
       if (!profile || !profile.email) {
         toast.error("Invalid profile data. Please login again.");
-        localStorage.removeItem("token");
-        navigate('/login');
+        // localStorage.removeItem("token");
+        // navigate('/login');
         return
       }
       setUser({
@@ -83,12 +83,12 @@ const Profile = () => {
       console.error("Error fetching profile:", err);
       if (err.response?.status === 401) {
           toast.error("Session expired. Please login again.");
-          localStorage.removeItem("token");
-          navigate("/login");
+          // localStorage.removeItem("token");
+          // navigate("/login");
         } else if (err.response?.status === 404) {
           toast.error("User profile not found.");
-          localStorage.removeItem("token");
-          navigate("/login");
+          // localStorage.removeItem("token");
+          // navigate("/login");
         } else {
           toast.error("Failed to load profile. Please try again.");
         }

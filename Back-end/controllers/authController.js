@@ -14,7 +14,7 @@ export const signin = async (req, res) => {
     if (!user) return res.status(400).json({ msg: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
+    if (!isMatch) return res.status(400).json({ msg: "Invalid credentialsfff" });
 
     if (!user.verified)
       return res.status(400).json({ msg: "Please verify your email before signing in" });
@@ -30,7 +30,7 @@ export const signin = async (req, res) => {
       token,
       user: {
         id: user._id,
-        name: user.name,
+        fullName: user.fullName,
         email: user.email,
       }
     });
@@ -43,7 +43,7 @@ export const signin = async (req, res) => {
 // 🔹 SIGN UP
 export const signup = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { fullName, email, password } = req.body;
 
     // 1️⃣ Check if user exists
     const existingUser = await User.findOne({ email });
@@ -51,11 +51,11 @@ export const signup = async (req, res) => {
       return res.status(400).json({ msg: "User already exists" });
 
     // 2️⃣ Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password.trim(), 10);
 
     // 3️⃣ Create user
     const user = await User.create({
-      name,
+      fullName,
       email,
       password: hashedPassword,
       verified: false
@@ -64,7 +64,7 @@ export const signup = async (req, res) => {
     // create profile
     const profile = await Profile.create({
       userId:user._id,
-      fullName:name,
+      fullName,
       email,
       password:hashedPassword,
     })
@@ -96,7 +96,7 @@ export const signup = async (req, res) => {
       to: user.email,
       subject: "Verify your email address",
       html: `
-        <h2>Hello ${user.name},</h2>
+        <h2>Hello ${user.fullName},</h2>
         <p>Thank you for signing up on <b>StudyVault</b>! Please verify your email by clicking below:</p>
         <a href="${verifyUrl}" style="color:#4F46E5; text-decoration:none;">Verify Email</a>
         <p>This link will expire in 1 hour.</p>

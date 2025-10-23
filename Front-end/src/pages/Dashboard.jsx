@@ -4,7 +4,8 @@ import {
   Home, TrendingUp, Star, Upload, User, Search, Grid, List,
   Eye, Download, Heart, Users, FileText, X,
   Mail, Award, Settings, Camera, MapPin,
-  Phone, Github
+  Phone, Github,
+  Calendar
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -70,7 +71,7 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
+  useEffect(() => { 
     const fetchProfile = async() =>{
     try {
       const token = localStorage.getItem("token");
@@ -116,80 +117,64 @@ const Dashboard = () => {
     fetchProfile();
   }, [navigate])
 
-  const [studyMaterials, setStudyMaterials] = useState([
-    {
-      id: 1,
-      title: 'Data Structures Complete Notes',
-      subject: 'Data Structures',
-      semester: '3rd Sem',
-      description: 'Comprehensive notes covering arrays, linked lists, trees, and graphs.',
-      author: 'Harsh Koundal',
-      date: 'Oct 12, 2025',
-      downloads: 120,
-      views: 450,
-      rating: 4.8,
-    },
-    {
-      id: 2,
-      title: 'Operating Systems - Process Management',
-      subject: 'Operating Systems',
-      semester: '4th Sem',
-      description: 'Detailed notes on process scheduling, algorithms, and synchronization.',
-      author: 'Priya Sharma',
-      date: 'Sep 25, 2025',
-      downloads: 89,
-      views: 320,
-      rating: 4.5,
-    },
-    {
-      id: 3,
-      title: 'Database Management Systems',
-      subject: 'DBMS',
-      semester: '3rd Sem',
-      description: 'Complete DBMS notes covering SQL, normalization, and transactions.',
-      author: 'Rahul Verma',
-      date: 'Sep 30, 2025',
-      downloads: 156,
-      views: 580,
-      rating: 4.9,
-    },
-    {
-      id: 4,
-      title: 'Computer Networks - TCP/IP',
-      subject: 'Computer Networks',
-      semester: '5th Sem',
-      description: 'In-depth coverage of TCP/IP protocol suite and OSI layers.',
-      author: 'Ankit Singh',
-      date: 'Oct 5, 2025',
-      downloads: 93,
-      views: 380,
-      rating: 4.6,
-    },
-    {
-      id: 5,
-      title: 'Machine Learning Basics',
-      subject: 'Machine Learning',
-      semester: '6th Sem',
-      description: 'Fundamentals of ML including supervised and unsupervised learning.',
-      author: 'Neha Patel',
-      date: 'Oct 10, 2025',
-      downloads: 142,
-      views: 520,
-      rating: 4.7,
-    },
-    {
-      id: 6,
-      title: 'Algorithms Design and Analysis',
-      subject: 'Algorithms',
-      semester: '4th Sem',
-      description: 'Complete guide to algorithm design paradigms and complexity.',
-      author: 'Mohit Kumar',
-      date: 'Sep 20, 2025',
-      downloads: 108,
-      views: 410,
-      rating: 4.4,
-    },
-  ]);
+const [studyMaterials, setStudyMaterials] = useState([]);
+
+useEffect(() => {
+  const fetchStudyMaterials = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const res = await axios.get(
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const materials = res.data;
+
+      if (!materials || materials.length === 0) {
+        toast.error("No study materials found.");
+        setStudyMaterials([]);
+        return;
+      }
+      const formattedMaterials = materials.map((m) => ({
+        id: m._id,
+        title: m.title || m.fileName || "Untitled",
+        subject: m.subject || "Unknown",
+        description: m.description || "",
+        author: m.author || "Unknown",
+        date: m.date ? new Date(m.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
+        downloads: m.downloads || 0,
+        views: m.views || 0,
+        fileUrl: m.fileUrl, 
+      }));
+
+      setStudyMaterials(formattedMaterials);
+      console.log("studyMaterialsData:", formattedMaterials);
+
+    } catch (err) {
+      console.error("Error fetching study materials:", err);
+
+      if (err.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        localStorage.removeItem("token");
+        navigate("/login");
+      } else if (err.response?.status === 404) {
+        toast.error("Study materials not found.");
+        setStudyMaterials([]);
+      } else {
+        toast.error("Failed to load study materials. Please try again.");
+      }
+    }
+  };
+
+  fetchStudyMaterials();
+}, [navigate]);
+
+ 
 
   const subjects = ['All Subjects', 'Data Structures', 'Operating Systems', 'DBMS', 'Computer Networks', 'Machine Learning', 'Algorithms'];
 
@@ -275,9 +260,6 @@ const Dashboard = () => {
                   <span className="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg text-sm font-semibold">
                     {material.subject}
                   </span>
-                  <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold">
-                    {material.semester}
-                  </span>
                 </div>
 
                 <p className="text-gray-600 text-sm mb-4 line-clamp-2">
@@ -290,15 +272,13 @@ const Dashboard = () => {
                     <span>{material.author}</span>
                   </div>
                   <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    <span>{material.date}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
                     <Download className="w-4 h-4" />
                     <span>{material.downloads}</span>
                   </div>
-                  {material.rating > 0 && (
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 text-yellow-400" fill="currentColor" />
-                      <span>{material.rating}</span>
-                    </div>
-                  )}
                 </div>
 
                 <div className="flex gap-2">
