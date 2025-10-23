@@ -2,6 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import authRoutes from './routes/authRoutes.js'
 import profileRoutes from './routes/profileRoutes.js'
@@ -55,6 +57,10 @@ mongoose.connect(MONGODB_URI, {
     process.exit(1);
 });
 
+// get file
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename)
+app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth',authRoutes)

@@ -56,7 +56,7 @@ const LoginPage = () => {
       }
       else {
         const res = await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/auth/signup`, {
-          name: userData.fullName,
+          fullName: userData.fullName,
           email: userData.email,
           password: userData.password,
         }, {

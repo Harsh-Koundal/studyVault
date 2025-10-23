@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Upload, Zap, Shield } from 'lucide-react';
+import toast from 'react-hot-toast';
+import axios from 'axios'
 
 export default function UploadPage() {
   const [pdfFile, setPdfFile] = useState(null);
@@ -11,6 +13,53 @@ export default function UploadPage() {
     materialType: '',
     description: ''
   });
+
+const handleUpload = async () => {
+  if (!pdfFile) return toast.error('Please select a PDF to upload.');
+  if (!formData.title || !formData.subject || !formData.materialType) 
+    return toast.error('Please fill all required fields.');
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    navigate('/login');
+    return;
+  }
+
+  const data = new FormData();
+  data.append('file', pdfFile);
+  data.append('title', formData.title);
+  data.append('subject', formData.subject);
+  data.append('materialType', formData.materialType);
+  data.append('description', formData.description);
+
+  try {
+    const res = await axios.post(
+      `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/uploads`,
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    toast.success('Material uploaded successfully!');
+    setPdfFile(null);
+    setPdfUrl(null);
+    setFormData({ title: '', subject: '', materialType: '', description: '' });
+
+  } catch (err) {
+    console.error('Upload error:', err);
+    if (err.response?.status === 401) {
+      toast.error('Session expired. Please login again.');
+      localStorage.removeItem('token');
+      navigate('/login');
+    } else {
+      toast.error('Failed to upload material. Please try again.');
+    }
+  }
+};
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -247,7 +296,7 @@ export default function UploadPage() {
 
       {/* Upload Button */}
       <div className="max-w-7xl mx-auto mt-6">
-        <button className="w-full bg-purple-600 text-white font-semibold py-4 rounded-xl hover:bg-purple-700 transition-colors shadow-lg">
+        <button onClick={handleUpload} className="w-full bg-purple-600 text-white font-semibold py-4 rounded-xl hover:bg-purple-700 transition-colors shadow-lg" >
           Upload Material
         </button>
       </div>
