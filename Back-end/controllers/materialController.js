@@ -1,6 +1,7 @@
 import express from 'express'
 import StudyMaterial from '../model/StudyMaterial.js'
 import User from '../model/User.js'
+import mongoose from 'mongoose';
 
 // upload document
 export const uploadMaterials = async (req, res) => {
@@ -95,37 +96,47 @@ export const getMyUploads = async (req, res) => {
 };
 
 
-// Add or remove favorite material
 export const toggleFavorite = async (req, res) => {
-    try {
-        const user = await User.findById(req.user._id);
-        const id = req.params.id;
-        const index = user.favorites.indexOf(id);
+  try {
+    const { id: materialId } = req.params;
 
-        if (index > -1) {
-            user.favorites.splice(index, 1);
-        } else {
-            user.favorites.push(id);
-        }
-
-        await user.save();
-        res.json(user.favorites);
-    } catch (err) {
-        console.error("Error toggling favorite:", err);
-        res.status(500).json({ msg: "Failed to toggle favorite" });
+    if (!mongoose.Types.ObjectId.isValid(materialId)) {
+      return res.status(400).json({ message: "Invalid material ID" });
     }
+
+    const material = await StudyMaterial.findById(materialId);
+    if (!material) return res.status(404).json({ message: "Material not found" });
+
+    const userId = req.user._id;
+    const index = material.favorites.findIndex(
+      (favId) => favId.toString() === userId.toString()
+    );
+
+    if (index === -1) material.favorites.push(userId);
+    else material.favorites.splice(index, 1);
+
+    await material.save();
+
+    res.json(material.favorites);
+  } catch (err) {
+    console.error("Error toggling favorite:", err);
+    res.status(500).json({ message: "Failed to toggle favorite." });
+  }
 };
 
 // get user favorite material 
 export const getFavorites = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id)
-      .populate({
-        path: "favorites",
-        populate: { path: "author", select: "fullName" }
-      });
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ msg: "Not authorized" });
+    }
 
-    res.json(user.favorites);
+    const userId = new mongoose.Types.ObjectId(req.user._id);
+
+    const favorites = await StudyMaterial.find({ favorites: userId })
+      .populate("author", "fullName");
+
+    res.json(favorites);
   } catch (err) {
     console.error("Error fetching favorites:", err);
     res.status(500).json({ msg: "Failed to fetch favorites" });

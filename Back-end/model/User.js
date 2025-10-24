@@ -11,7 +11,6 @@ const userSchema = new mongoose.Schema({
   contactNumber: String,
   github: String,
   about: String,
-  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "StudyMaterial" }]
 }, { timestamps: true });
 
 userSchema.methods.matchPassword = async function (enteredPassword) {
