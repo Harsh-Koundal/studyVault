@@ -46,27 +46,54 @@ export const getAllMaterials = async (req, res) => {
     }
 };
 
-// get popular materials
-export const getPopularMaterials = async (req, res) => {
-    try {
-        const popular = (await StudyMaterial.find()).toSorted({ downloads: -1 }).limit(10);
-        res.json(popular);
-    } catch (err) {
-        console.error("Error fetching popular materials:", err);
-        res.status(500).json({ msg: "Failed to fetch popular materials" });
+// get study material by Id 
+export const getMaterialById = async(req,res)=>{
+    try{
+        const material = await StudyMaterial.findById(req.params.id).populate("author", "fullName");
+
+        if(!material){
+            return res.status(404).json({msg:"Material not found"});
+        }
+
+        material.views = (material.views ||0) + 1;
+        await material.save();
+
+        res.json(material);
+    }catch(err){
+        console.error("Error fetching material:",err);
+        res.status(500).json({msg:"Failed to fetch material"});
     }
 };
 
+// get popular materials
+export const getPopularMaterials = async (req, res) => {
+  try {
+    const popular = await StudyMaterial.find()
+      .populate("author", "fullName")
+      .sort({ downloads: -1 })
+      .limit(10);
+
+    res.json(popular);
+  } catch (err) {
+    console.error("Error fetching popular materials:", err);
+    res.status(500).json({ msg: "Failed to fetch popular materials" });
+  }
+};
+
+
 // users uploads
 export const getMyUploads = async (req, res) => {
-    try {
-        const uploads = await StudyMaterial.find({ author: req.user._id });
-        res.json(uploads);
-    } catch (err) {
-        console.error("Error fetching uploads:", err);
-        res.status(500).json({ msg: "Failed to fetch uploads" });
-    }
+  try {
+    const uploads = await StudyMaterial.find({ author: req.user._id })
+      .populate("author", "fullName");
+
+    res.json(uploads);
+  } catch (err) {
+    console.error("Error fetching uploads:", err);
+    res.status(500).json({ msg: "Failed to fetch uploads" });
+  }
 };
+
 
 // Add or remove favorite material
 export const toggleFavorite = async (req, res) => {
@@ -91,11 +118,16 @@ export const toggleFavorite = async (req, res) => {
 
 // get user favorite material 
 export const getFavorites = async (req, res) => {
-    try {
-        const user = await User.findById(req.user._id).populate("favorites");
-        res.json(user.favorites);
-    } catch (err) {
-        console.error("Error fetching favorites:", err);
-        res.status(500).json({ msg: "Failed to fetch favorites" });
-    }
+  try {
+    const user = await User.findById(req.user._id)
+      .populate({
+        path: "favorites",
+        populate: { path: "author", select: "fullName" }
+      });
+
+    res.json(user.favorites);
+  } catch (err) {
+    console.error("Error fetching favorites:", err);
+    res.status(500).json({ msg: "Failed to fetch favorites" });
+  }
 };

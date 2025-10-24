@@ -7,6 +7,7 @@ import {
   getMyUploads,
   toggleFavorite,
   getFavorites,
+  getMaterialById,
 } from "../controllers/materialController.js";
 import multer from 'multer';
 import path from 'path';
@@ -42,6 +43,7 @@ const upload = multer({ storage, fileFilter });
 // Public routes
 router.get("/", getAllMaterials);
 router.get("/popular", getPopularMaterials);
+router.get('/:id',authMiddleware,getMaterialById)
 
 // Protected routes
 // **Make sure the key in Postman form-data is 'file'**

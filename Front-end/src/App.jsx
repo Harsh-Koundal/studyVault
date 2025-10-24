@@ -10,6 +10,7 @@ import UploadPage from './pages/Upload.jsx'
 import Profile from './pages/Profile.jsx'
 import EmailVerifySuccess from './components/emailVerifySuccess.jsx'
 import EmailVerifyFailed from './components/EmailVerifyFailed.jsx'
+import MaterialPreview from './pages/materialPreview.jsx'
 function App() {
   return (
     <Router>
@@ -23,6 +24,7 @@ function App() {
         <Route path='/profile' element={<Profile/>}/>
         <Route path='/verify-email/success' element={<EmailVerifySuccess/>}/>
         <Route path='/verify-email/failed' element={<EmailVerifyFailed/>}/>
+        <Route path='/material/:id' element={<MaterialPreview/>}/>
 
 
       </Routes>
