@@ -14,7 +14,7 @@ export const signin = async (req, res) => {
     if (!user) return res.status(400).json({ msg: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ msg: "Invalid credentialsfff" });
+    if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
 
     if (!user.verified)
       return res.status(400).json({ msg: "Please verify your email before signing in" });

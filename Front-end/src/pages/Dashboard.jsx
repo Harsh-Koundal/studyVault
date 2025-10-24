@@ -145,7 +145,7 @@ useEffect(() => {
         title: m.title || m.fileName || "Untitled",
         subject: m.subject || "Unknown",
         description: m.description || "",
-        author: m.author || "Unknown",
+        author: m.author.fullName || "Unknown",
         date: m.date ? new Date(m.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
         downloads: m.downloads || 0,
         views: m.views || 0,
@@ -340,8 +340,8 @@ useEffect(() => {
       </div>
 
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent Materials</h2>
-        {renderMaterialsList(filteredMaterials.slice(0, 6), viewMode)}
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">All Materials</h2>
+        {renderMaterialsList(filteredMaterials, viewMode)}
       </div>
     </>
   );

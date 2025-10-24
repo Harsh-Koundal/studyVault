@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
+import User from "../model/User.js";
 
-export const authMiddleware = (req, res, next) => {
+export const authMiddleware = async (req, res, next) => {
   try {
     const token = req.header("Authorization")?.replace("Bearer ", "");
 
@@ -9,7 +10,14 @@ export const authMiddleware = (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // attach decoded data (like id, email, role)
+
+    // Fetch full user from DB
+    const user = await User.findById(decoded.id).select("_id fullName email");
+    if (!user) {
+      return res.status(401).json({ msg: "User not found." });
+    }
+
+    req.user = user; 
     next();
   } catch (err) {
     console.error("Auth middleware error:", err);
