@@ -145,7 +145,7 @@ useEffect(() => {
         title: m.title || m.fileName || "Untitled",
         subject: m.subject || "Unknown",
         description: m.description || "",
-        author: m.author.fullName || "Unknown",
+        author: m.author?.fullName || "Unknown",
         date: m.date ? new Date(m.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
         downloads: m.downloads || 0,
         views: m.views || 0,
@@ -173,6 +173,52 @@ useEffect(() => {
 
   fetchStudyMaterials();
 }, [navigate]);
+
+useEffect(() => {
+  const fetchFavorites = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      const res = await axios.get(
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/favorites`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setFavorites(res.data.map((m) => m._id)); 
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  fetchFavorites();
+}, []);
+
+const toggleFavorite = async (id) => {
+  if (!id) {
+    console.error("Cannot toggle favorite: id is missing");
+    toast.error("Invalid material ID");
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Unauthorized");
+
+    // Update backend
+    await axios.put(
+      `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/favorite/${id}`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    // Update frontend state immediately
+    setFavorites((prev) =>
+      prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
+    );
+  } catch (err) {
+    console.error("Error toggling favorite:", err);
+    toast.error("Failed to update favorites.");
+  }
+};
+
 
  
 
@@ -203,11 +249,6 @@ useEffect(() => {
 
   const filteredMaterials = getFilteredMaterials();
 
-  const toggleFavorite = (id) => {
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
-    );
-  };
 
 
   const handleDownload = (material) => {
@@ -233,74 +274,98 @@ useEffect(() => {
           <p className="text-gray-600">Try adjusting your search or filters</p>
         </div>
       ) : (
-        <div className={`grid gap-6 ${currentViewMode === 'grid' ? 'sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
-          {materials.map((material) => (
-            <div
-              key={material.id}
-              className="bg-white rounded-2xl border-2 border-gray-200 hover:border-blue-500 hover:shadow-xl transition-all duration-300 overflow-hidden group"
-            >
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <FileText className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <button
-                    onClick={() => toggleFavorite(material.id)}
-                    className={`transition-all ${favorites.includes(material.id) ? 'text-red-500 scale-110' : 'text-gray-400 hover:text-red-400'}`}
-                  >
-                    <Heart className="w-5 h-5" fill={favorites.includes(material.id) ? 'currentColor' : 'none'} />
-                  </button>
-                </div>
-
-                <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                  {material.title}
-                </h3>
-
-                <div className="flex items-center gap-2 mb-4 flex-wrap">
-                  <span className="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg text-sm font-semibold">
-                    {material.subject}
-                  </span>
-                </div>
-
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                  {material.description}
-                </p>
-
-                <div className="flex items-center gap-4 text-sm text-gray-600 mb-4 flex-wrap">
-                  <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    <span>{material.author}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    <span>{material.date}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Download className="w-4 h-4" />
-                    <span>{material.downloads}</span>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => navigate(`/material/${material.id}`)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition font-semibold text-sm"
-                  >
-                    <Eye className="w-4 h-4" />
-                    Preview
-                  </button>
-                  <button
-                    onClick={() => handleDownload(material)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:shadow-lg transition font-semibold text-sm"
-                  >
-                    <Download className="w-4 h-4" />
-                    Download
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div
+  className={`grid gap-6 ${
+    currentViewMode === "grid"
+      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+      : "grid-cols-1"
+  }`}
+>
+  {materials.map((material) => (
+    <div
+      key={material.id}
+      className="flex flex-col bg-white rounded-2xl border border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all duration-300 overflow-hidden group"
+    >
+      <div className="p-6 flex flex-col flex-1">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FileText className="w-6 h-6 text-blue-600" />
+          </div>
+          <button
+            onClick={() => toggleFavorite(material.id)}
+            className={`transition-all ${
+              favorites.includes(material.id)
+                ? "text-red-500 scale-110"
+                : "text-gray-400 hover:text-red-400"
+            }`}
+          >
+            <Heart
+              className="w-5 h-5"
+              fill={favorites.includes(material.id) ? "currentColor" : "none"}
+            />
+          </button>
         </div>
+
+        {/* Title */}
+        <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
+          {material.title}
+        </h3>
+
+        {/* Subject */}
+        <div className="mb-3">
+          <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 rounded-lg text-sm font-semibold">
+            {material.subject}
+          </span>
+        </div>
+
+        {/* Description */}
+        <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">
+          {material.description}
+        </p>
+
+        {/* Info */}
+        <div className="flex items-center gap-4 text-sm text-gray-600 mb-4 flex-wrap">
+          <div className="flex items-center gap-1">
+            <Users className="w-4 h-4" />
+            <span>{material.author || "Unknown"}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Calendar className="w-4 h-4" />
+            <span>{new Date(material.date).toLocaleDateString()}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Download className="w-4 h-4" />
+            <span>{material.downloads || 0}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Eye className="w-4 h-4" />
+            <span>{material.views || 0}</span>
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex gap-2 mt-auto">
+          <button
+            onClick={() => navigate(`/material/${material.id}`)}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 transition font-semibold text-sm"
+          >
+            <Eye className="w-4 h-4" />
+            Preview
+          </button>
+          <button
+            onClick={() => handleDownload(material)}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:shadow-md transition font-semibold text-sm"
+          >
+            <Download className="w-4 h-4" />
+            Download
+          </button>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+
       )}
     </>
   );
@@ -335,7 +400,7 @@ useEffect(() => {
           </div>
         </div>
         <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-3">
-          Welcome Back, Harsh!
+          Welcome Back, {user.fullName}!
         </h1>
       </div>
 

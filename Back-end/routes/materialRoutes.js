@@ -43,14 +43,14 @@ const upload = multer({ storage, fileFilter });
 // Public routes
 router.get("/", getAllMaterials);
 router.get("/popular", getPopularMaterials);
-router.get('/:id',authMiddleware,getMaterialById)
+router.get("/favorites", authMiddleware, getFavorites); // static route first
 
 // Protected routes
-// **Make sure the key in Postman form-data is 'file'**
 router.post("/uploads", authMiddleware, upload.single('file'), uploadMaterials);
-
 router.get("/my-uploads", authMiddleware, getMyUploads);
 router.put("/favorite/:id", authMiddleware, toggleFavorite);
-router.get("/favorites", authMiddleware, getFavorites);
+
+// Parameterized route LAST
+router.get('/:id', authMiddleware, getMaterialById);
 
 export default router;

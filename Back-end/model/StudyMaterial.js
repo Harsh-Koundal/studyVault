@@ -8,6 +8,8 @@ const studyMaterialSchema = new mongoose.Schema({
     date:{type:Date, default:Date.now},
     downloads:{type:Number,default:0},
     views:{type:Number,default:0},
-    fileUrl:String
+    fileUrl:String,
+    favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
+
 },{timestamps:true});
 export default mongoose.model("StudyMaterial",studyMaterialSchema);
