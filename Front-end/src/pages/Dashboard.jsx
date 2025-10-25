@@ -42,6 +42,8 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [favorites, setFavorites] = useState([1, 3]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [myUploads, setMyUploads] = useState([]);
+  const [Popular, setPopular] = useState([]);
 
   const [isEditing, setIsEditing] = useState(false);
   const [user, setUser] = useState({
@@ -90,6 +92,7 @@ const Dashboard = () => {
         return
       }
       setUser({
+        _id: profile._id,
         fullName: profile.fullName || "",
         email: profile.email,
         contactNumber: profile.contactNumber || "",
@@ -98,7 +101,7 @@ const Dashboard = () => {
         github: profile.github || "",
         stream: profile.stream || ""
       });
-      console.log("profileData:",res.data)
+      // console.log("profileData:",res.data)
     } catch (err) {
       console.error("Error fetching profile:", err);
       if (err.response?.status === 401) {
@@ -119,6 +122,7 @@ const Dashboard = () => {
 
 const [studyMaterials, setStudyMaterials] = useState([]);
 
+// fetch studymaterial
 useEffect(() => {
   const fetchStudyMaterials = async () => {
     try {
@@ -153,7 +157,6 @@ useEffect(() => {
       }));
 
       setStudyMaterials(formattedMaterials);
-      console.log("studyMaterialsData:", formattedMaterials);
 
     } catch (err) {
       console.error("Error fetching study materials:", err);
@@ -174,6 +177,7 @@ useEffect(() => {
   fetchStudyMaterials();
 }, [navigate]);
 
+// fetch favorite study material
 useEffect(() => {
   const fetchFavorites = async () => {
     try {
@@ -191,6 +195,7 @@ useEffect(() => {
   fetchFavorites();
 }, []);
 
+// set / remove favorite
 const toggleFavorite = async (id) => {
   if (!id) {
     console.error("Cannot toggle favorite: id is missing");
@@ -219,6 +224,74 @@ const toggleFavorite = async (id) => {
   }
 };
 
+// fetch my uploads
+useEffect(() => {
+  const getMyUpload = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const res = await axios.get(
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/my-uploads`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const formattedUploads = res.data.map(m => ({
+        id: m._id,
+        title: m.title || m.fileName || "Untitled",
+        subject: m.subject || "Unknown",
+        description: m.description || "",
+        author: m.author?.fullName || "Unknown",
+        date: m.date ? new Date(m.date).toLocaleDateString("en-US") : "",
+        downloads: m.downloads || 0,
+        views: m.views || 0,
+        fileUrl: m.fileUrl,
+      }));
+
+      setMyUploads(formattedUploads);
+    } catch (err) {
+      console.error("Error fetching my upload", err);
+      toast.error("Failed to fetch uploads");
+    }
+  };
+
+  getMyUpload();
+}, []);
+
+
+// fetch popular study material
+useEffect(() => {
+  const getPopular = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const res = await axios.get(
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/popular`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const formattedUploads = res.data.map(m => ({
+        id: m._id,
+        title: m.title || m.fileName || "Untitled",
+        subject: m.subject || "Unknown",
+        description: m.description || "",
+        author: m.author?.fullName || "Unknown",
+        date: m.date ? new Date(m.date).toLocaleDateString("en-US") : "",
+        downloads: m.downloads || 0,
+        views: m.views || 0,
+        fileUrl: m.fileUrl,
+      }));
+
+      setPopular(formattedUploads);
+    } catch (err) {
+      console.error("Error fetching my upload", err);
+      toast.error("Failed to fetch uploads");
+    }
+  };
+
+  getPopular();
+}, []);
 
  
 
@@ -230,9 +303,9 @@ const toggleFavorite = async (id) => {
     if (activeTab === 'Favorites') {
       materials = materials.filter((m) => favorites.includes(m.id));
     } else if (activeTab === 'Popular') {
-      materials = [...materials].sort((a, b) => b.downloads - a.downloads);
+      materials = Popular;
     } else if (activeTab === 'My Uploads') {
-      materials = materials.filter((m) => m.author === 'Harsh Koundal');
+      materials = myUploads;
     }
 
     return materials.filter((m) => {

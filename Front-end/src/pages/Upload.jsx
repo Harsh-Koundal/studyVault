@@ -241,19 +241,13 @@ const handleUpload = async () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Subject <span className="text-red-500">*</span>
               </label>
-              <select
+              <input
                 name="subject"
                 value={formData.subject}
                 onChange={handleInputChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700"
               >
-                <option value="">Select subject</option>
-                <option value="mathematics">Mathematics</option>
-                <option value="physics">Physics</option>
-                <option value="chemistry">Chemistry</option>
-                <option value="computer-science">Computer Science</option>
-                <option value="biology">Biology</option>
-              </select>
+              </input>
             </div>
 
             {/* Material Type */}
