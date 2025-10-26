@@ -14,52 +14,52 @@ export default function UploadPage() {
     description: ''
   });
 
-const handleUpload = async () => {
-  if (!pdfFile) return toast.error('Please select a PDF to upload.');
-  if (!formData.title || !formData.subject || !formData.materialType) 
-    return toast.error('Please fill all required fields.');
+  const handleUpload = async () => {
+    if (!pdfFile) return toast.error('Please select a PDF to upload.');
+    if (!formData.title || !formData.subject || !formData.materialType)
+      return toast.error('Please fill all required fields.');
 
-  const token = localStorage.getItem('token');
-  if (!token) {
-    navigate('/login');
-    return;
-  }
-
-  const data = new FormData();
-  data.append('file', pdfFile);
-  data.append('title', formData.title);
-  data.append('subject', formData.subject);
-  data.append('materialType', formData.materialType);
-  data.append('description', formData.description);
-
-  try {
-    const res = await axios.post(
-      `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/uploads`,
-      data,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
-
-    toast.success('Material uploaded successfully!');
-    setPdfFile(null);
-    setPdfUrl(null);
-    setFormData({ title: '', subject: '', materialType: '', description: '' });
-
-  } catch (err) {
-    console.error('Upload error:', err);
-    if (err.response?.status === 401) {
-      toast.error('Session expired. Please login again.');
-      localStorage.removeItem('token');
+    const token = localStorage.getItem('token');
+    if (!token) {
       navigate('/login');
-    } else {
-      toast.error('Failed to upload material. Please try again.');
+      return;
     }
-  }
-};
+
+    const data = new FormData();
+    data.append('file', pdfFile);
+    data.append('title', formData.title);
+    data.append('subject', formData.subject);
+    data.append('materialType', formData.materialType);
+    data.append('description', formData.description);
+
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/uploads`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      toast.success('Material uploaded successfully!');
+      setPdfFile(null);
+      setPdfUrl(null);
+      setFormData({ title: '', subject: '', materialType: '', description: '' });
+
+    } catch (err) {
+      console.error('Upload error:', err);
+      if (err.response?.status === 401) {
+        toast.error('Session expired. Please login again.');
+        localStorage.removeItem('token');
+        navigate('/login');
+      } else {
+        toast.error('Failed to upload material. Please try again.');
+      }
+    }
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -149,11 +149,10 @@ const handleUpload = async () => {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${
-                isDragging
+              className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${isDragging
                   ? 'border-purple-500 bg-purple-50'
                   : 'border-gray-300 bg-gray-50'
-              }`}
+                }`}
             >
               <input
                 type="file"
@@ -203,7 +202,7 @@ const handleUpload = async () => {
                   </button>
                 </div>
               </div>
-              
+
               <div className="border-2 border-gray-200 rounded-2xl overflow-hidden bg-white" style={{ height: '500px' }}>
                 <iframe
                   src={pdfUrl}
@@ -242,12 +241,14 @@ const handleUpload = async () => {
                 Subject <span className="text-red-500">*</span>
               </label>
               <input
+                type="text"
                 name="subject"
                 value={formData.subject}
                 onChange={handleInputChange}
+                placeholder="e.g., Mathematics, Web Development, DSA"
+                required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700"
-              >
-              </input>
+              />
             </div>
 
             {/* Material Type */}
