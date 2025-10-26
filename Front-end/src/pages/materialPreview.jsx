@@ -12,7 +12,6 @@ const MaterialPreview = () => {
   const navigate = useNavigate();
   const [material, setMaterial] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isLiked, setIsLiked] = useState(false);
 
   useEffect(() => {
     fetchMaterial();
@@ -38,85 +37,55 @@ const MaterialPreview = () => {
     }
   };
 
-  const handleDownload = async () => {
-    if (!material?.fileUrl) {
-      toast.error("File not available");
-      return;
-    }
+  const handleDownload = async (material) => {
+  if (!material.fileUrl) {
+    toast.error("File not found");
+    return;
+  }
 
-    try {
-      const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Unauthorized");
 
-      // Update download count
-      await axios.post(
-        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/${id}/download`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+    // 1️⃣ Update download count in backend
+    await axios.put(
+      `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/download/${material._id}`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-      // Trigger download
-      const link = document.createElement('a');
-      link.href = material.fileUrl;
-      link.download = material.title || 'material.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    // 2️⃣ Update frontend UI
+    setMaterial((prev) => ({
+  ...prev,
+  downloads: prev.downloads + 1
+}));
 
-      toast.success("Download started!");
 
-      // Refresh material data to show updated download count
-      fetchMaterial();
-    } catch (err) {
-      console.error("Error downloading:", err);
-      toast.error("Failed to download");
-    }
-  };
+    // 3️⃣ Download File 
+   const response = await axios.get(
+      `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/file/${material._id}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+      }
+    );
 
-  const handleLike = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/${id}/like`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setIsLiked(!isLiked);
-      toast.success(isLiked ? "Removed from favorites" : "Added to favorites");
-    } catch (err) {
-      console.error("Error liking material:", err);
-      toast.error("Failed to update");
-    }
-  };
+    const blob = new Blob([response.data], { type: "application/pdf" });
+const url = window.URL.createObjectURL(blob);
+const link = document.createElement("a");
+link.href = url;
+link.download = `${material.title || "study-material"}.pdf`; 
+document.body.appendChild(link);
+link.click();
+link.remove();
+window.URL.revokeObjectURL(url);
 
-  const handleShare = () => {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url);
-    toast.success("Link copied to clipboard!");
-  };
 
-  const handleReport = async () => {
-    const reason = prompt("Please provide a reason for reporting this material:");
-    if (!reason) return;
-
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/${id}/report`,
-        { reason },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      toast.success("Material reported. We'll review it soon.");
-    } catch (err) {
-      console.error("Error reporting material:", err);
-      toast.error("Failed to report");
-    }
-  };
+  } catch (err) {
+    console.error("Download failed:", err);
+    toast.error("Download failed. Try again.");
+  }
+};
 
   if (loading) {
     return (
@@ -280,7 +249,7 @@ const MaterialPreview = () => {
 
               {/* Download Button */}
               <button
-                onClick={handleDownload}
+                onClick={()=>handleDownload(material)}
                 className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-black text-white rounded-xl hover:bg-gray-800 transition font-semibold"
               >
                 <Download className="w-5 h-5" />

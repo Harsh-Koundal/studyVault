@@ -2,6 +2,8 @@ import express from 'express'
 import StudyMaterial from '../model/StudyMaterial.js'
 import User from '../model/User.js'
 import mongoose from 'mongoose';
+import path from 'path'
+import fs from 'fs'
 
 // upload document
 export const uploadMaterials = async (req, res) => {
@@ -140,5 +142,50 @@ export const getFavorites = async (req, res) => {
   } catch (err) {
     console.error("Error fetching favorites:", err);
     res.status(500).json({ msg: "Failed to fetch favorites" });
+  }
+};
+
+
+// download material
+// ✅ Update download count only
+export const updateDownloadCount = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const material = await StudyMaterial.findById(id);
+
+    if (!material) {
+      return res.status(404).json({ msg: "Material not found" });
+    }
+
+    material.downloads += 1;
+    await material.save();
+
+    res.json({ msg: "Download count updated", downloads: material.downloads });
+  } catch (err) {
+    console.error("Download count update error:", err);
+    res.status(500).json({ msg: "Failed to update download count" });
+  }
+};
+
+// ✅ Serve the file (GET)
+export const downloadMaterialFile = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const material = await StudyMaterial.findById(id);
+
+    if (!material || !material.fileUrl) {
+      return res.status(404).json({ msg: "File not found" });
+    }
+
+    const fullPath = path.join(process.cwd(), material.fileUrl);
+
+    if (!fs.existsSync(fullPath)) {
+      return res.status(404).json({ msg: "File not found on server" });
+    }
+
+    res.download(fullPath, path.basename(fullPath));
+  } catch (err) {
+    console.error("File download error:", err);
+    res.status(500).json({ msg: "File download failed" });
   }
 };

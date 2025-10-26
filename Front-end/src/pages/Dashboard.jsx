@@ -39,7 +39,9 @@ const Dashboard = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('All Subjects');
-  const [activeTab, setActiveTab] = useState('Dashboard');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem("activeTab") || 'Dashboard';
+  });
   const [favorites, setFavorites] = useState([1, 3]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [myUploads, setMyUploads] = useState([]);
@@ -56,8 +58,11 @@ const Dashboard = () => {
     about: ""
   });
 
+  useEffect(() => {
+    localStorage.setItem("activeTab", activeTab);
+  }, [activeTab])
   const handleEdit = () => setIsEditing(true);
- const handleSave = async () => {
+  const handleSave = async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Unauthorized");
@@ -73,38 +78,38 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => { 
-    const fetchProfile = async() =>{
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-      const res = await axios.get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/profile`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const profile = res.data;
-      if (!profile || !profile.email) {
-        toast.error("Invalid profile data. Please login again.");
-        localStorage.removeItem("token");
-        navigate('/login');
-        return
-      }
-      setUser({
-        _id: profile._id,
-        fullName: profile.fullName || "",
-        email: profile.email,
-        contactNumber: profile.contactNumber || "",
-        address: profile.address || "",
-        about: profile.about || "",
-        github: profile.github || "",
-        stream: profile.stream || ""
-      });
-      // console.log("profileData:",res.data)
-    } catch (err) {
-      console.error("Error fetching profile:", err);
-      if (err.response?.status === 401) {
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate('/login');
+          return;
+        }
+        const res = await axios.get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/profile`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const profile = res.data;
+        if (!profile || !profile.email) {
+          toast.error("Invalid profile data. Please login again.");
+          localStorage.removeItem("token");
+          navigate('/login');
+          return
+        }
+        setUser({
+          _id: profile._id,
+          fullName: profile.fullName || "",
+          email: profile.email,
+          contactNumber: profile.contactNumber || "",
+          address: profile.address || "",
+          about: profile.about || "",
+          github: profile.github || "",
+          stream: profile.stream || ""
+        });
+        // console.log("profileData:",res.data)
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        if (err.response?.status === 401) {
           toast.error("Session expired. Please login again.");
           localStorage.removeItem("token");
           navigate("/login");
@@ -120,180 +125,180 @@ const Dashboard = () => {
     fetchProfile();
   }, [navigate])
 
-const [studyMaterials, setStudyMaterials] = useState([]);
+  const [studyMaterials, setStudyMaterials] = useState([]);
 
-// fetch studymaterial
-useEffect(() => {
-  const fetchStudyMaterials = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/login");
-        return;
+  // fetch studymaterial
+  useEffect(() => {
+    const fetchStudyMaterials = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+
+        const res = await axios.get(
+          `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const materials = res.data;
+
+        if (!materials || materials.length === 0) {
+          toast.error("No study materials found.");
+          setStudyMaterials([]);
+          return;
+        }
+        const formattedMaterials = materials.map((m) => ({
+          id: m._id,
+          title: m.title || m.fileName || "Untitled",
+          subject: m.subject || "Unknown",
+          description: m.description || "",
+          author: m.author?.fullName || "Unknown",
+          date: m.date ? new Date(m.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
+          downloads: m.downloads || 0,
+          views: m.views || 0,
+          fileUrl: m.fileUrl,
+        }));
+
+        setStudyMaterials(formattedMaterials);
+
+      } catch (err) {
+        console.error("Error fetching study materials:", err);
+
+        if (err.response?.status === 401) {
+          toast.error("Session expired. Please login again.");
+          localStorage.removeItem("token");
+          navigate("/login");
+        } else if (err.response?.status === 404) {
+          toast.error("Study materials not found.");
+          setStudyMaterials([]);
+        } else {
+          toast.error("Failed to load study materials. Please try again.");
+        }
       }
+    };
 
-      const res = await axios.get(
-        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+    fetchStudyMaterials();
+  }, [navigate]);
 
-      const materials = res.data;
-
-      if (!materials || materials.length === 0) {
-        toast.error("No study materials found.");
-        setStudyMaterials([]);
-        return;
+  // fetch favorite study material
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const res = await axios.get(
+          `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/favorites`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setFavorites(res.data.map((m) => m._id));
+      } catch (err) {
+        console.error(err);
       }
-      const formattedMaterials = materials.map((m) => ({
-        id: m._id,
-        title: m.title || m.fileName || "Untitled",
-        subject: m.subject || "Unknown",
-        description: m.description || "",
-        author: m.author?.fullName || "Unknown",
-        date: m.date ? new Date(m.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
-        downloads: m.downloads || 0,
-        views: m.views || 0,
-        fileUrl: m.fileUrl, 
-      }));
+    };
+    fetchFavorites();
+  }, []);
 
-      setStudyMaterials(formattedMaterials);
+  // set / remove favorite
+  const toggleFavorite = async (id) => {
+    if (!id) {
+      console.error("Cannot toggle favorite: id is missing");
+      toast.error("Invalid material ID");
+      return;
+    }
 
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Unauthorized");
+
+      // Update backend
+      await axios.put(
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/favorite/${id}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Update frontend state immediately
+      setFavorites((prev) =>
+        prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
+      );
     } catch (err) {
-      console.error("Error fetching study materials:", err);
+      console.error("Error toggling favorite:", err);
+      toast.error("Failed to update favorites.");
+    }
+  };
 
-      if (err.response?.status === 401) {
-        toast.error("Session expired. Please login again.");
-        localStorage.removeItem("token");
-        navigate("/login");
-      } else if (err.response?.status === 404) {
-        toast.error("Study materials not found.");
-        setStudyMaterials([]);
-      } else {
-        toast.error("Failed to load study materials. Please try again.");
+  // fetch my uploads
+  useEffect(() => {
+    const getMyUpload = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const res = await axios.get(
+          `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/my-uploads`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const formattedUploads = res.data.map(m => ({
+          id: m._id,
+          title: m.title || m.fileName || "Untitled",
+          subject: m.subject || "Unknown",
+          description: m.description || "",
+          author: m.author?.fullName || "Unknown",
+          date: m.date ? new Date(m.date).toLocaleDateString("en-US") : "",
+          downloads: m.downloads || 0,
+          views: m.views || 0,
+          fileUrl: m.fileUrl,
+        }));
+
+        setMyUploads(formattedUploads);
+      } catch (err) {
+        console.error("Error fetching my upload", err);
+        toast.error("Failed to fetch uploads");
       }
-    }
-  };
+    };
 
-  fetchStudyMaterials();
-}, [navigate]);
-
-// fetch favorite study material
-useEffect(() => {
-  const fetchFavorites = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-      const res = await axios.get(
-        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/favorites`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setFavorites(res.data.map((m) => m._id)); 
-    } catch (err) {
-      console.error(err);
-    }
-  };
-  fetchFavorites();
-}, []);
-
-// set / remove favorite
-const toggleFavorite = async (id) => {
-  if (!id) {
-    console.error("Cannot toggle favorite: id is missing");
-    toast.error("Invalid material ID");
-    return;
-  }
-
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) throw new Error("Unauthorized");
-
-    // Update backend
-    await axios.put(
-      `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/favorite/${id}`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    // Update frontend state immediately
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
-    );
-  } catch (err) {
-    console.error("Error toggling favorite:", err);
-    toast.error("Failed to update favorites.");
-  }
-};
-
-// fetch my uploads
-useEffect(() => {
-  const getMyUpload = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      const res = await axios.get(
-        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/my-uploads`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      const formattedUploads = res.data.map(m => ({
-        id: m._id,
-        title: m.title || m.fileName || "Untitled",
-        subject: m.subject || "Unknown",
-        description: m.description || "",
-        author: m.author?.fullName || "Unknown",
-        date: m.date ? new Date(m.date).toLocaleDateString("en-US") : "",
-        downloads: m.downloads || 0,
-        views: m.views || 0,
-        fileUrl: m.fileUrl,
-      }));
-
-      setMyUploads(formattedUploads);
-    } catch (err) {
-      console.error("Error fetching my upload", err);
-      toast.error("Failed to fetch uploads");
-    }
-  };
-
-  getMyUpload();
-}, []);
+    getMyUpload();
+  }, []);
 
 
-// fetch popular study material
-useEffect(() => {
-  const getPopular = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+  // fetch popular study material
+  useEffect(() => {
+    const getPopular = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
 
-      const res = await axios.get(
-        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/popular`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+        const res = await axios.get(
+          `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/popular`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-      const formattedUploads = res.data.map(m => ({
-        id: m._id,
-        title: m.title || m.fileName || "Untitled",
-        subject: m.subject || "Unknown",
-        description: m.description || "",
-        author: m.author?.fullName || "Unknown",
-        date: m.date ? new Date(m.date).toLocaleDateString("en-US") : "",
-        downloads: m.downloads || 0,
-        views: m.views || 0,
-        fileUrl: m.fileUrl,
-      }));
+        const formattedUploads = res.data.map(m => ({
+          id: m._id,
+          title: m.title || m.fileName || "Untitled",
+          subject: m.subject || "Unknown",
+          description: m.description || "",
+          author: m.author?.fullName || "Unknown",
+          date: m.date ? new Date(m.date).toLocaleDateString("en-US") : "",
+          downloads: m.downloads || 0,
+          views: m.views || 0,
+          fileUrl: m.fileUrl,
+        }));
 
-      setPopular(formattedUploads);
-    } catch (err) {
-      console.error("Error fetching my upload", err);
-      toast.error("Failed to fetch uploads");
-    }
-  };
+        setPopular(formattedUploads);
+      } catch (err) {
+        console.error("Error fetching my upload", err);
+        toast.error("Failed to fetch uploads");
+      }
+    };
 
-  getPopular();
-}, []);
+    getPopular();
+  }, []);
 
- 
+
 
   const subjects = ['All Subjects', 'Data Structures', 'Operating Systems', 'DBMS', 'Computer Networks', 'Machine Learning', 'Algorithms'];
 
@@ -324,11 +329,56 @@ useEffect(() => {
 
 
 
-  const handleDownload = (material) => {
-    setStudyMaterials((materials) =>
-      materials.map((m) => (m.id === material.id ? { ...m, downloads: m.downloads + 1 } : m))
+  const handleDownload = async (material) => {
+  if (!material.fileUrl) {
+    toast.error("File not found");
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Unauthorized");
+
+    // 1️⃣ Update download count in backend
+    await axios.put(
+      `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/download/${material.id}`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
     );
-  };
+
+    // 2️⃣ Update frontend UI
+    setStudyMaterials((materials) =>
+      materials.map((m) =>
+        m.id === material.id ? { ...m, downloads: m.downloads + 1 } : m
+      )
+    );
+
+    // 3️⃣ Download File 
+   const response = await axios.get(
+      `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/file/${material.id}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+      }
+    );
+
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${material.title || "study-material"}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+
+  } catch (err) {
+    console.error("Download failed:", err);
+    toast.error("Download failed. Try again.");
+  }
+};
+
 
   const sidebarItems = [
     { icon: Home, label: 'Dashboard' },
@@ -348,96 +398,94 @@ useEffect(() => {
         </div>
       ) : (
         <div
-  className={`grid gap-6 ${
-    currentViewMode === "grid"
-      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-      : "grid-cols-1"
-  }`}
->
-  {materials.map((material) => (
-    <div
-      key={material.id}
-      className="flex flex-col bg-white rounded-2xl border border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all duration-300 overflow-hidden group"
-    >
-      <div className="p-6 flex flex-col flex-1">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-            <FileText className="w-6 h-6 text-blue-600" />
-          </div>
-          <button
-            onClick={() => toggleFavorite(material.id)}
-            className={`transition-all ${
-              favorites.includes(material.id)
-                ? "text-red-500 scale-110"
-                : "text-gray-400 hover:text-red-400"
+          className={`grid gap-6 ${currentViewMode === "grid"
+              ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+              : "grid-cols-1"
             }`}
-          >
-            <Heart
-              className="w-5 h-5"
-              fill={favorites.includes(material.id) ? "currentColor" : "none"}
-            />
-          </button>
+        >
+          {materials.map((material) => (
+            <div
+              key={material.id}
+              className="flex flex-col bg-white rounded-2xl border border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all duration-300 overflow-hidden group"
+            >
+              <div className="p-6 flex flex-col flex-1">
+                {/* Header */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <FileText className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <button
+                    onClick={() => toggleFavorite(material.id)}
+                    className={`transition-all ${favorites.includes(material.id)
+                        ? "text-red-500 scale-110"
+                        : "text-gray-400 hover:text-red-400"
+                      }`}
+                  >
+                    <Heart
+                      className="w-5 h-5"
+                      fill={favorites.includes(material.id) ? "currentColor" : "none"}
+                    />
+                  </button>
+                </div>
+
+                {/* Title */}
+                <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                  {material.title}
+                </h3>
+
+                {/* Subject */}
+                <div className="mb-3">
+                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 rounded-lg text-sm font-semibold">
+                    {material.subject}
+                  </span>
+                </div>
+
+                {/* Description */}
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">
+                  {material.description}
+                </p>
+
+                {/* Info */}
+                <div className="flex items-center gap-4 text-sm text-gray-600 mb-4 flex-wrap">
+                  <div className="flex items-center gap-1">
+                    <Users className="w-4 h-4" />
+                    <span>{material.author || "Unknown"}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    <span>{new Date(material.date).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Download className="w-4 h-4" />
+                    <span>{material.downloads || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Eye className="w-4 h-4" />
+                    <span>{material.views || 0}</span>
+                  </div>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-2 mt-auto">
+                  <button
+                    onClick={() => navigate(`/material/${material.id}`)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 transition font-semibold text-sm"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Preview
+                  </button>
+                  <button
+                    onClick={() => handleDownload(material)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:shadow-md transition font-semibold text-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-
-        {/* Title */}
-        <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
-          {material.title}
-        </h3>
-
-        {/* Subject */}
-        <div className="mb-3">
-          <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 rounded-lg text-sm font-semibold">
-            {material.subject}
-          </span>
-        </div>
-
-        {/* Description */}
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">
-          {material.description}
-        </p>
-
-        {/* Info */}
-        <div className="flex items-center gap-4 text-sm text-gray-600 mb-4 flex-wrap">
-          <div className="flex items-center gap-1">
-            <Users className="w-4 h-4" />
-            <span>{material.author || "Unknown"}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Calendar className="w-4 h-4" />
-            <span>{new Date(material.date).toLocaleDateString()}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Download className="w-4 h-4" />
-            <span>{material.downloads || 0}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Eye className="w-4 h-4" />
-            <span>{material.views || 0}</span>
-          </div>
-        </div>
-
-        {/* Buttons */}
-        <div className="flex gap-2 mt-auto">
-          <button
-            onClick={() => navigate(`/material/${material.id}`)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 transition font-semibold text-sm"
-          >
-            <Eye className="w-4 h-4" />
-            Preview
-          </button>
-          <button
-            onClick={() => handleDownload(material)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:shadow-md transition font-semibold text-sm"
-          >
-            <Download className="w-4 h-4" />
-            Download
-          </button>
-        </div>
-      </div>
-    </div>
-  ))}
-</div>
 
       )}
     </>
@@ -498,10 +546,10 @@ useEffect(() => {
           {activeTab === 'Favorites'
             ? 'My Favorite Materials'
             : activeTab === 'Popular'
-            ? 'Popular Study Materials'
-            : activeTab === 'My Uploads'
-            ? 'My Uploaded Materials'
-            : 'All Study Materials'}
+              ? 'Popular Study Materials'
+              : activeTab === 'My Uploads'
+                ? 'My Uploaded Materials'
+                : 'All Study Materials'}
         </h1>
         <p className="text-gray-600">{filteredMaterials.length} materials available</p>
       </div>
@@ -775,7 +823,7 @@ useEffect(() => {
               </div>
             </div>
           </div>
-        )} 
+        )}
 
         <main className="flex-1 mt-14">
           {activeTab === 'Dashboard' && renderDashboardContent()}

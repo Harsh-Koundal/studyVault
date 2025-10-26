@@ -8,6 +8,8 @@ import {
   toggleFavorite,
   getFavorites,
   getMaterialById,
+  downloadMaterialFile,
+  updateDownloadCount,
 } from "../controllers/materialController.js";
 import multer from 'multer';
 import path from 'path';
@@ -43,7 +45,9 @@ const upload = multer({ storage, fileFilter });
 // Public routes
 router.get("/", getAllMaterials);
 router.get("/popular", getPopularMaterials);
-router.get("/favorites", authMiddleware, getFavorites); // static route first
+router.get("/favorites", authMiddleware, getFavorites);
+router.put("/download/:id", authMiddleware, updateDownloadCount);
+router.get("/file/:id", authMiddleware, downloadMaterialFile);
 
 // Protected routes
 router.post("/uploads", authMiddleware, upload.single('file'), uploadMaterials);
