@@ -13,6 +13,7 @@ import EmailVerifyFailed from './components/EmailVerifyFailed.jsx'
 import MaterialPreview from './pages/materialPreview.jsx'
 import AboutUs from './pages/AboutUs.jsx'
 import Services from './pages/Services.jsx'
+import ContactUs from './pages/Contact.jsx'
 function App() {
   return (
     <Router>
@@ -29,6 +30,7 @@ function App() {
         <Route path='/material/:id' element={<MaterialPreview/>}/>
         <Route path='/about' element={<AboutUs/>}/>
         <Route path='/services' element={<Services/>}/>
+        <Route path='/contact' element={<ContactUs/>}/>
 
 
       </Routes>
