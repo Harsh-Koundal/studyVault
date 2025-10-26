@@ -12,6 +12,7 @@ import EmailVerifySuccess from './components/emailVerifySuccess.jsx'
 import EmailVerifyFailed from './components/EmailVerifyFailed.jsx'
 import MaterialPreview from './pages/materialPreview.jsx'
 import AboutUs from './pages/AboutUs.jsx'
+import Services from './pages/Services.jsx'
 function App() {
   return (
     <Router>
@@ -27,6 +28,7 @@ function App() {
         <Route path='/verify-email/failed' element={<EmailVerifyFailed/>}/>
         <Route path='/material/:id' element={<MaterialPreview/>}/>
         <Route path='/about' element={<AboutUs/>}/>
+        <Route path='/services' element={<Services/>}/>
 
 
       </Routes>
