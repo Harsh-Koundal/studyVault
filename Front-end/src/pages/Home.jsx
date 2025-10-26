@@ -6,11 +6,16 @@ import {
   GraduationCap, Shield, Heart, User, Eye, Clock,
   Sparkles, Award
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
   const [hoveredCard, setHoveredCard] = useState(null);
   const { scrollYProgress } = useScroll();
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8]);
   const canvasRef = useRef(null);
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -23,6 +28,7 @@ const Home = () => {
     renderer.setPixelRatio(window.devicePixelRatio);
     camera.position.z = 40;
 
+    // Create floating geometric shapes
     const shapes = [];
     
     for (let i = 0; i < 8; i++) {
@@ -59,6 +65,7 @@ const Home = () => {
       shapes.push(mesh);
     }
 
+    // Add lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
 
@@ -85,6 +92,7 @@ const Home = () => {
         shape.position.y += shape.velocity.y;
         shape.position.z += shape.velocity.z;
 
+        // Bounce off boundaries
         if (shape.position.x > 40) shape.velocity.x *= -1;
         if (shape.position.x < -40) shape.velocity.x *= -1;
         if (shape.position.y > 40) shape.velocity.y *= -1;
@@ -137,19 +145,11 @@ const Home = () => {
     { icon: Download, label: "Downloads", value: "15,000+" }
   ];
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
-  const navigateTo = (path) => {
-    if (typeof window !== 'undefined') {
-      window.location.href = !token ? '/login' : path;
-    }
-  };
-
   return (
     <div className="overflow-x-hidden relative">
       <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full pointer-events-none z-0" style={{ opacity: 0.3 }} />
 
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center pt-20">
+      <motion.section style={{ opacity, scale }} className="relative min-h-screen flex items-center pt-20">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div animate={{ background: ['radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%)', 'radial-gradient(circle at 80% 50%, rgba(168, 85, 247, 0.15) 0%, transparent 50%)', 'radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 50%)', 'radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%)'] }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} className="absolute inset-0" />
         </div>
@@ -174,10 +174,10 @@ const Home = () => {
               </motion.p>
 
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1 }} className="flex flex-wrap gap-4 mb-12">
-                <motion.button whileHover={{ scale: 1.05, y: -2, boxShadow: "0 20px 40px rgba(99, 102, 241, 0.4)" }} whileTap={{ scale: 0.95 }} className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-semibold shadow-lg" onClick={() => navigateTo('/upload')}>
+                <motion.button whileHover={{ scale: 1.05, y: -2, boxShadow: "0 20px 40px rgba(99, 102, 241, 0.4)" }} whileTap={{ scale: 0.95 }} className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-semibold shadow-lg" onClick={()=>navigate(!token?'/login':'/upload')}>
                   <Upload className="w-5 h-5" />Upload Notes<ArrowRight className="w-5 h-5" />
                 </motion.button>
-                <motion.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-2 bg-white/80 backdrop-blur-xl text-purple-600 px-8 py-4 rounded-xl font-semibold shadow-lg border-2 border-purple-200" onClick={() => navigateTo('/dashboard')}>
+                <motion.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-2 bg-white/80 backdrop-blur-xl text-purple-600 px-8 py-4 rounded-xl font-semibold shadow-lg border-2 border-purple-200" onClick={()=>navigate(!token?'/login':'/dashboard')}>
                   <Download className="w-5 h-5" />Find Question Paper
                 </motion.button>
               </motion.div>
@@ -214,14 +214,13 @@ const Home = () => {
             </motion.div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Stats Section */}
-      <motion.section initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }} className="relative bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white py-12 overflow-hidden">
+      <motion.section initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="relative bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white py-12 overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, i) => (
-              <motion.div key={i} initial={{ opacity: 0, scale: 0.5 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true, margin: "-100px" }} transition={{ delay: i * 0.1 }} whileHover={{ scale: 1.08, y: -3 }} className="text-center cursor-pointer">
+              <motion.div key={i} initial={{ opacity: 0, scale: 0.5 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} whileHover={{ scale: 1.08, y: -3 }} className="text-center cursor-pointer">
                 <div className="inline-block mb-3">
                   <stat.icon className="w-8 h-8" />
                 </div>
@@ -233,18 +232,17 @@ const Home = () => {
         </div>
       </motion.section>
 
-      {/* Browse by Category */}
       <section className="py-24 bg-white relative">
         <div className="container mx-auto px-4">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }} className="text-center mb-16">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Browse by Category</h2>
-            <motion.div initial={{ width: 0 }} whileInView={{ width: 112 }} viewport={{ once: true, margin: "-100px" }} transition={{ delay: 0.2, duration: 0.8 }} className="h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full mx-auto mb-6" />
+            <motion.div initial={{ width: 0 }} whileInView={{ width: 112 }} viewport={{ once: true }} className="h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full mx-auto mb-6" />
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">Access thousands of study materials across different categories</p>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {categories.map((cat, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ delay: i * 0.1, duration: 0.6 }} whileHover={{ y: -10, scale: 1.03 }} onHoverStart={() => setHoveredCard(i)} onHoverEnd={() => setHoveredCard(null)} className="relative bg-white rounded-2xl p-8 border-2 border-gray-100 hover:border-purple-200 transition-all duration-300 cursor-pointer overflow-hidden shadow-lg hover:shadow-xl group">
+              <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.2 }} whileHover={{ y: -10, scale: 1.03 }} onHoverStart={() => setHoveredCard(i)} onHoverEnd={() => setHoveredCard(null)} className="relative bg-white rounded-2xl p-8 border-2 border-gray-100 hover:border-purple-200 transition-all duration-300 cursor-pointer overflow-hidden shadow-lg hover:shadow-xl group">
                 <div className={`w-16 h-16 bg-gradient-to-br ${cat.color} rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:shadow-xl transition-shadow`}>
                   <cat.icon className="w-8 h-8 text-white" />
                 </div>
@@ -257,18 +255,17 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Popular Study Materials */}
       <section className="py-24 bg-gradient-to-br from-gray-50 to-purple-50">
         <div className="container mx-auto px-4">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }} className="text-center mb-16">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Popular Study Materials</h2>
-            <motion.div initial={{ width: 0 }} whileInView={{ width: 112 }} viewport={{ once: true, margin: "-100px" }} transition={{ delay: 0.2, duration: 0.8 }} className="h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full mx-auto mb-6" />
+            <motion.div initial={{ width: 0 }} whileInView={{ width: 112 }} viewport={{ once: true }} className="h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full mx-auto mb-6" />
             <p className="text-gray-600 text-lg">Most downloaded notes and question papers this week</p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
             {studyMaterials.map((material, i) => (
-              <motion.div key={material.id} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ delay: i * 0.1, duration: 0.6 }} whileHover={{ y: -10, scale: 1.03 }} className="bg-white border-2 border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:border-purple-300 transition-all duration-300 cursor-pointer group">
+              <motion.div key={material.id} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.2 }} whileHover={{ y: -10, scale: 1.03 }} className="bg-white border-2 border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:border-purple-300 transition-all duration-300 cursor-pointer group">
                 <div className="flex justify-between items-start mb-4">
                   <div className="bg-purple-100 p-3 rounded-xl group-hover:bg-purple-200 transition-colors">
                     <material.icon className="w-6 h-6 text-purple-600" />
@@ -289,33 +286,32 @@ const Home = () => {
                   <div className="flex items-center gap-1"><Star className="w-4 h-4 fill-yellow-400 text-yellow-400" /><span>{material.rating}</span></div>
                 </div>
                 <div className="flex gap-2">
-                  <motion.button whileHover={{ scale: 1.05 }} className="flex-1 flex items-center justify-center gap-2 border-2 border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 font-medium transition-colors" onClick={() => navigateTo('/dashboard')}><Eye className="w-4 h-4" />Preview</motion.button>
-                  <motion.button whileHover={{ scale: 1.05 }} className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-lg font-medium shadow-lg hover:shadow-xl transition-shadow" onClick={() => navigateTo('/dashboard')}><Download className="w-4 h-4"/>Download</motion.button>
+                  <motion.button whileHover={{ scale: 1.05 }} className="flex-1 flex items-center justify-center gap-2 border-2 border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 font-medium transition-colors" onClick={()=>navigate(!token?'/login':'/dashboard')}><Eye className="w-4 h-4" />Preview</motion.button>
+                  <motion.button whileHover={{ scale: 1.05 }} className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-lg font-medium shadow-lg hover:shadow-xl transition-shadow" onClick={()=>navigate(!token?'/login':'/dashboard')}><Download className="w-4 h-4"/>Download</motion.button>
                 </div>
               </motion.div>
             ))}
           </div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }} className="text-center mt-12">
-            <motion.button whileHover={{ scale: 1.05, y: -2, boxShadow: "0 15px 35px rgba(99, 102, 241, 0.3)" }} whileTap={{ scale: 0.95 }} className="px-8 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-2xl flex items-center gap-2 mx-auto transition-shadow" onClick={() => navigateTo('/dashboard')}>
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mt-12">
+            <motion.button whileHover={{ scale: 1.05, y: -2, boxShadow: "0 15px 35px rgba(99, 102, 241, 0.3)" }} whileTap={{ scale: 0.95 }} className="px-8 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-2xl flex items-center gap-2 mx-auto transition-shadow" onClick={()=>navigate(!token?'/login':'/dashboard')}>
               Explore All Materials<ArrowRight className="w-5 h-5" />
             </motion.button>
           </motion.div>
         </div>
       </section>
 
-      {/* Why Choose */}
       <section className="py-24 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 relative overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }} className="text-center mb-16">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Why Choose Our Platform?</h2>
-            <motion.div initial={{ width: 0 }} whileInView={{ width: 112 }} viewport={{ once: true, margin: "-100px" }} transition={{ delay: 0.2, duration: 0.8 }} className="h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full mx-auto mb-6" />
+            <motion.div initial={{ width: 0 }} whileInView={{ width: 112 }} viewport={{ once: true }} className="h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full mx-auto mb-6" />
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">Built with modern technology to provide the best experience for students</p>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {features.map((feature, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ delay: i * 0.1, duration: 0.6 }} whileHover={{ y: -10, scale: 1.03 }} className="bg-white/80 backdrop-blur-xl rounded-2xl p-8 border border-gray-200 transition-all duration-300 cursor-pointer group hover:shadow-lg">
+              <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.2 }} whileHover={{ y: -10, scale: 1.03 }} className="bg-white/80 backdrop-blur-xl rounded-2xl p-8 border border-gray-200 transition-all duration-300 cursor-pointer group hover:shadow-lg">
                 <div className={`w-16 h-16 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-shadow`}>
                   <feature.icon className="w-8 h-8 text-white" />
                 </div>
@@ -327,19 +323,18 @@ const Home = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <motion.section initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }} className="relative py-32 bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 text-white overflow-hidden">
+      <motion.section initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="relative py-32 bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 text-white overflow-hidden">
         <motion.div animate={{ x: [0, 40, 0], y: [0, -40, 0] }} transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }} className="absolute top-20 left-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
         
         <div className="container mx-auto px-4 relative z-10 text-center">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }}>
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <h2 className="text-5xl md:text-6xl font-black mb-6">Ready to Start Sharing <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Knowledge?</span></h2>
             
             <p className="text-xl text-slate-300 max-w-2xl mx-auto mb-12">Join thousands of students who are already benefiting from our platform. Upload your first material today and contribute to the community.</p>
 
             <div className="flex flex-wrap gap-4 justify-center">
-              <motion.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-2 bg-white text-purple-900 px-8 py-4 rounded-xl font-bold shadow-xl hover:shadow-2xl transition-shadow" onClick={() => navigateTo('/dashboard')}>Get Started Free<ArrowRight className="w-5 h-5" /></motion.button>
-              <motion.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-4 rounded-xl font-bold shadow-xl border-2 border-white/20 hover:shadow-2xl transition-shadow" onClick={() => navigateTo('/dashboard')}>Browse Materials<Clock className="w-5 h-5" /></motion.button>
+              <motion.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-2 bg-white text-purple-900 px-8 py-4 rounded-xl font-bold shadow-xl hover:shadow-2xl transition-shadow" onClick={()=>navigate(!token?'/login':'/dashboard')}>Get Started Free<ArrowRight className="w-5 h-5" /></motion.button>
+              <motion.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-4 rounded-xl font-bold shadow-xl border-2 border-white/20 hover:shadow-2xl transition-shadow" onClick={()=>navigate(!token?'/login':'/dashboard')}>Browse Materials<Clock className="w-5 h-5" /></motion.button>
             </div>
           </motion.div>
         </div>
@@ -348,4 +343,4 @@ const Home = () => {
   );
 };
 
-export default Home
+export default Home;
