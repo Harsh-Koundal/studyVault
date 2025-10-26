@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Home, TrendingUp, Star, Upload, User, Search, Grid, List,
   Eye, Download, Heart, Users, FileText, X,
-  Mail, Award, Settings, Camera, MapPin,
+  Mail, Award, Settings, MapPin,
   Phone, Github,
   Calendar
 } from 'lucide-react';
@@ -300,7 +300,7 @@ const Dashboard = () => {
 
 
 
-  const subjects = ['All Subjects', 'Data Structures', 'Operating Systems', 'DBMS', 'Computer Networks', 'Machine Learning', 'Algorithms'];
+  const subjects = ['All Subjects', 'Data Structures', 'DBMS', 'Computer-science', 'Machine Learning', 'Algorithms','mathematics','hindi','science','english'];
 
   const getFilteredMaterials = () => {
     let materials = studyMaterials;
