@@ -5,6 +5,7 @@ import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import VerificationToken from '../model/verificationToken.js';
 import Profile from '../model/Profile.js';
+import {Resend} from 'resend'
 
 // 🔹 SIGN IN
 export const signin = async (req, res) => {
@@ -86,12 +87,12 @@ export const signup = async (req, res) => {
       },
     });
 
-    // ✅ The verify link should go to BACKEND first, not frontend.
+    const resend = new Resend(process.env.RESEND_API_KEY);
     // Backend handles token validation and redirects to frontend.
     const verifyUrl = `${process.env.BACKEND_URL}/api/auth/verify/${token}`;
 
     // 6️⃣ Send verification email
-    await transporter.sendMail({
+    await resend.emails.send({
       from: `"StudyVault" <${process.env.EMAIL_USER}>`,
       to: user.email,
       subject: "Verify your email address",
