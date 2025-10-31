@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Upload, Zap, Shield } from 'lucide-react';
 import toast from 'react-hot-toast';
-import axios from 'axios'
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 export default function UploadPage() {
   const [pdfFile, setPdfFile] = useState(null);
@@ -13,6 +14,7 @@ export default function UploadPage() {
     materialType: '',
     description: ''
   });
+  const navigate = useNavigate();
 
   const handleUpload = async () => {
     if (!pdfFile) return toast.error('Please select a PDF to upload.');

@@ -13,7 +13,8 @@ export const uploadMaterials = async (req, res) => {
         }
 
         // Multer stores file info in req.file
-        const fileUrl = req.file ? `/uploads/${req.file.filename}` : null;
+        const fileUrl = req.file?.secure_url || req.file?.path;
+
 
         // Validate required fields
         const { title, subject, description } = req.body;
@@ -167,7 +168,7 @@ export const updateDownloadCount = async (req, res) => {
   }
 };
 
-// ✅ Serve the file (GET)
+// ✅ Serve file properly from Cloudinary or local
 export const downloadMaterialFile = async (req, res) => {
   try {
     const id = req.params.id;
@@ -177,8 +178,13 @@ export const downloadMaterialFile = async (req, res) => {
       return res.status(404).json({ msg: "File not found" });
     }
 
-    const fullPath = path.join(process.cwd(), material.fileUrl);
+    // If stored on Cloudinary → redirect to file URL
+    if (material.fileUrl.startsWith("http")) {
+      return res.redirect(material.fileUrl);
+    }
 
+    // If file stored locally (for local dev)
+    const fullPath = path.join(process.cwd(), material.fileUrl);
     if (!fs.existsSync(fullPath)) {
       return res.status(404).json({ msg: "File not found on server" });
     }
@@ -189,3 +195,4 @@ export const downloadMaterialFile = async (req, res) => {
     res.status(500).json({ msg: "File download failed" });
   }
 };
+

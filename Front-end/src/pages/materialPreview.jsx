@@ -28,7 +28,7 @@ const MaterialPreview = () => {
         }
       );
       setMaterial(res.data);
-      // console.log(material.fileUrl.replace(/ /g, '%20'))
+      console.log(res.data)
     } catch (err) {
       console.error("Error fetching material:", err);
       toast.error("Failed to load material");
@@ -38,54 +38,62 @@ const MaterialPreview = () => {
   };
 
   const handleDownload = async (material) => {
-  if (!material.fileUrl) {
-    toast.error("File not found");
-    return;
-  }
+    if (!material.fileUrl) {
+      toast.error("File not found");
+      return;
+    }
 
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) throw new Error("Unauthorized");
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Unauthorized");
 
-    // 1️⃣ Update download count in backend
-    await axios.put(
-      `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/download/${material._id}`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+      // 1️⃣ Update download count in backend
+      await axios.put(
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/download/${material._id}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-    // 2️⃣ Update frontend UI
-    setMaterial((prev) => ({
-  ...prev,
-  downloads: prev.downloads + 1
-}));
+      // 2️⃣ Update UI
+      setMaterial((prev) => ({ ...prev, downloads: prev.downloads + 1 }));
 
-
-    // 3️⃣ Download File 
-   const response = await axios.get(
-      `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/file/${material._id}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: "blob",
+      // 3️⃣ If fileUrl is a full Cloudinary or external link — open directly
+      if (material.fileUrl.startsWith("http")) {
+        const link = document.createElement("a");
+        link.href = material.fileUrl;
+        link.download = `${material.title || "study-material"}.pdf`;
+        link.target = "_blank";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        return;
       }
-    );
 
-    const blob = new Blob([response.data], { type: "application/pdf" });
-const url = window.URL.createObjectURL(blob);
-const link = document.createElement("a");
-link.href = url;
-link.download = `${material.title || "study-material"}.pdf`; 
-document.body.appendChild(link);
-link.click();
-link.remove();
-window.URL.revokeObjectURL(url);
+      // 4️⃣ Otherwise (for local files), try fetching via backend
+      const response = await axios.get(
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/file/${material._id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "blob",
+        }
+      );
 
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${material.title || "study-material"}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
 
-  } catch (err) {
-    console.error("Download failed:", err);
-    toast.error("Download failed. Try again.");
-  }
-};
+    } catch (err) {
+      console.error("Download failed:", err);
+      toast.error("Download failed. Try again.");
+    }
+  };
+
 
   if (loading) {
     return (
@@ -114,6 +122,20 @@ window.URL.revokeObjectURL(url);
       </div>
     );
   }
+
+const getPreviewUrl = (url) => {
+  if (!url) return null;
+
+  // If it's a Cloudinary file, wrap with Google Docs viewer for inline display
+  if (url.includes("cloudinary.com")) {
+    return `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
+  }
+
+  // Otherwise, just return the URL as-is (e.g., for local or direct PDF files)
+  return url;
+};
+
+
 
   return (
     <div className="min-h-screen bg-gray-50 mt-10">
@@ -145,11 +167,16 @@ window.URL.revokeObjectURL(url);
               {material.fileUrl ? (
                 <div className="border-2 border-gray-200 rounded-xl overflow-hidden mb-6">
                   <iframe
-                    src={`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}${material.fileUrl.replace(/ /g, '%20')}`}
+                    src={getPreviewUrl(material.fileUrl)}
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      toast.error("Preview not available for this file type");
+                    }}
                     className="w-full"
-                    style={{ height: '600px' }}
+                    style={{ height: "600px" }}
                     title="PDF Preview"
                   />
+
 
                 </div>
               ) : (
@@ -163,7 +190,7 @@ window.URL.revokeObjectURL(url);
 
               {/* Description */}
               {material.description && (
-                <div className="prose max-w-none">
+                <div className="prose max-w-none mt-10">
                   <h3 className="text-xl font-semibold text-gray-900 mb-3">Description</h3>
                   <p className="text-gray-700 leading-relaxed">{material.description}</p>
                 </div>
@@ -249,7 +276,7 @@ window.URL.revokeObjectURL(url);
 
               {/* Download Button */}
               <button
-                onClick={()=>handleDownload(material)}
+                onClick={() => handleDownload(material)}
                 className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-black text-white rounded-xl hover:bg-gray-800 transition font-semibold"
               >
                 <Download className="w-5 h-5" />
