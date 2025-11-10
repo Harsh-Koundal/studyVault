@@ -1,11 +1,11 @@
+// ...existing code...
 import User from '../model/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import VerificationToken from '../model/verificationToken.js';
 import Profile from '../model/Profile.js';
-import {Resend} from 'resend'
+import sgMail from '@sendgrid/mail';
 
 // 🔹 SIGN IN
 export const signin = async (req, res) => {
@@ -63,12 +63,12 @@ export const signup = async (req, res) => {
     });
 
     // create profile
-    const profile = await Profile.create({
-      userId:user._id,
+    await Profile.create({
+      userId: user._id,
       fullName,
       email,
-      password:hashedPassword,
-    })
+      password: hashedPassword,
+    });
 
     // 4️⃣ Create email verification token
     const token = crypto.randomBytes(32).toString("hex");
@@ -78,31 +78,31 @@ export const signup = async (req, res) => {
       createdAt: Date.now(),
     });
 
-    // 5️⃣ Setup mail transport
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    // 5️⃣ Send email via SendGrid
+    if (!process.env.SENDGRID_API_KEY) {
+      console.error("SENDGRID_API_KEY is not set in environment");
+      return res.status(500).json({ msg: "Email service not configured" });
+    }
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    // Backend handles token validation and redirects to frontend.
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
     const verifyUrl = `${process.env.BACKEND_URL}/api/auth/verify/${token}`;
+    const fromAddress = process.env.EMAIL_FROM || 'no-reply@studyvault.app';
 
-    // 6️⃣ Send verification email
-    await resend.emails.send({
-      from: `"StudyVault" <${process.env.EMAIL_USER}>`,
+    const msg = {
       to: user.email,
+      from: fromAddress,
       subject: "Verify your email address",
       html: `
         <h2>Hello ${user.fullName},</h2>
-        <p>Thank you for signing up on <b>StudyVault</b>! Please verify your email by clicking below:</p>
-        <a href="${verifyUrl}" style="color:#4F46E5; text-decoration:none;">Verify Email</a>
+        <p>Welcome to <b>StudyVault</b>!</p>
+        <p>Please verify your email by clicking the link below:</p>
+        <a href="${verifyUrl}" style="color:#6366f1;font-weight:bold;">Verify Email</a>
         <p>This link will expire in 1 hour.</p>
-      `,
-    });
+      `
+    };
+
+    await sgMail.send(msg);
 
     res.status(201).json({
       message: "User registered successfully! Please check your email to verify your account."
@@ -134,3 +134,4 @@ export const verifyEmail = async (req, res) => {
     return res.redirect(`${process.env.FRONTEND_URL}/verify-email/failed`);
   }
 };
+// ...existing code...
