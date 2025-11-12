@@ -1,4 +1,3 @@
-// ...existing code...
 import User from '../model/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -134,4 +133,3 @@ export const verifyEmail = async (req, res) => {
     return res.redirect(`${process.env.FRONTEND_URL}/verify-email/failed`);
   }
 };
-// ...existing code...
