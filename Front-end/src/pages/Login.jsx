@@ -63,7 +63,7 @@ const LoginPage = () => {
           headers: { "Content-Type": "application/json" },
           withCredentials: true,
         });
-        toast.success("Registered successfully! Check your email.")
+        toast.success("Registered successfully!")
       }
     } catch (err) {
       console.log()
