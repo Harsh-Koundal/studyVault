@@ -79,25 +79,25 @@ export const signup = async (req, res) => {
 
         const verifyUrl = `${process.env.BACKEND_URL}/api/auth/verify/${token}`;
 
-        await transporter.sendMail({
-          from: `"StudyVault" <${process.env.EMAIL_USER}>`,
-          to: existingUser.email,
-          subject: "Verify your email address",
-          html: `
-            <h2>Hello ${existingUser.fullName},</h2>
-            <p>Your account already exists but is not verified.</p>
-            <p>Please verify your email by clicking the link below:</p>
-            <a href="${verifyUrl}" style="color:#6366f1;font-weight:bold;">
-              Verify Email
-            </a>
-            <p>This link will expire in 1 hour.</p>
-          `,
-        });
+        // await transporter.sendMail({
+        //   from: `"StudyVault" <${process.env.EMAIL_USER}>`,
+        //   to: existingUser.email,
+        //   subject: "Verify your email address",
+        //   html: `
+        //     <h2>Hello ${existingUser.fullName},</h2>
+        //     <p>Your account already exists but is not verified.</p>
+        //     <p>Please verify your email by clicking the link below:</p>
+        //     <a href="${verifyUrl}" style="color:#6366f1;font-weight:bold;">
+        //       Verify Email
+        //     </a>
+        //     <p>This link will expire in 1 hour.</p>
+        //   `,
+        // });
 
-        return res.status(200).json({
-          message:
-            "Account exists but email not verified. Verification email has been resent.",
-        });
+      //   return res.status(200).json({
+      //     message:
+      //       "Account exists but email not verified. Verification email has been resent.",
+      //   });
       }
 
       // ❌ Already verified
@@ -112,7 +112,6 @@ export const signup = async (req, res) => {
       fullName,
       email,
       password: hashedPassword,
-      verified: false
     });
 
     // create profile
@@ -135,24 +134,24 @@ export const signup = async (req, res) => {
     // 6️⃣ Send verification email
     const verifyUrl = `${process.env.BACKEND_URL}/api/auth/verify/${token}`;
 
-    await transporter.sendMail({
-      from: `"StudyVault" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: "Verify your email address",
-      html: `
-        <h2>Hello ${user.fullName},</h2>
-        <p>Welcome to <b>StudyVault</b>!</p>
-        <p>Please verify your email by clicking the link below:</p>
-        <a href="${verifyUrl}" style="color:#6366f1;font-weight:bold;">
-          Verify Email
-        </a>
-        <p>This link will expire in 1 hour.</p>
-      `,
-    });
+    // await transporter.sendMail({
+    //   from: `"StudyVault" <${process.env.EMAIL_USER}>`,
+    //   to: user.email,
+    //   subject: "Verify your email address",
+    //   html: `
+    //     <h2>Hello ${user.fullName},</h2>
+    //     <p>Welcome to <b>StudyVault</b>!</p>
+    //     <p>Please verify your email by clicking the link below:</p>
+    //     <a href="${verifyUrl}" style="color:#6366f1;font-weight:bold;">
+    //       Verify Email
+    //     </a>
+    //     <p>This link will expire in 1 hour.</p>
+    //   `,
+    // });
 
     return res.status(201).json({
       message:
-        "User registered successfully! Please check your email to verify your account.",
+        "User registered successfully!",
     });
   } catch (err) {
     console.error("Signup error:", err);
