@@ -5,6 +5,20 @@ import crypto from 'crypto';
 import VerificationToken from '../model/verificationToken.js';
 import Profile from '../model/Profile.js';
 import sgMail from '@sendgrid/mail';
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+dotenv.config();
+
+
+const transporter = nodemailer.createTransport({
+  host:process.env.EMAIL_HOST,
+  port : Number(process.env.EMAIL_PORT),
+  secure:false,
+  auth:{
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  }
+});
 
 // 🔹 SIGN IN
 export const signin = async (req, res) => {
@@ -47,8 +61,48 @@ export const signup = async (req, res) => {
 
     // 1️⃣ Check if user exists
     const existingUser = await User.findOne({ email });
-    if (existingUser)
+
+    if (existingUser) {
+      // 🔁 If not verified → resend verification email
+      if (!existingUser.verified) {
+        // delete old tokens
+        await VerificationToken.deleteMany({ userId: existingUser._id });
+
+        // create new token
+        const token = crypto.randomBytes(32).toString("hex");
+
+        await VerificationToken.create({
+          userId: existingUser._id,
+          token,
+          createdAt: Date.now(),
+        });
+
+        const verifyUrl = `${process.env.BACKEND_URL}/api/auth/verify/${token}`;
+
+        await transporter.sendMail({
+          from: `"StudyVault" <${process.env.EMAIL_USER}>`,
+          to: existingUser.email,
+          subject: "Verify your email address",
+          html: `
+            <h2>Hello ${existingUser.fullName},</h2>
+            <p>Your account already exists but is not verified.</p>
+            <p>Please verify your email by clicking the link below:</p>
+            <a href="${verifyUrl}" style="color:#6366f1;font-weight:bold;">
+              Verify Email
+            </a>
+            <p>This link will expire in 1 hour.</p>
+          `,
+        });
+
+        return res.status(200).json({
+          message:
+            "Account exists but email not verified. Verification email has been resent.",
+        });
+      }
+
+      // ❌ Already verified
       return res.status(400).json({ msg: "User already exists" });
+    }
 
     // 2️⃣ Hash password
     const hashedPassword = await bcrypt.hash(password.trim(), 10);
@@ -69,48 +123,46 @@ export const signup = async (req, res) => {
       password: hashedPassword,
     });
 
-    // 4️⃣ Create email verification token
+    // create verification token
     const token = crypto.randomBytes(32).toString("hex");
+
     await VerificationToken.create({
       userId: user._id,
       token,
       createdAt: Date.now(),
     });
 
-    // 5️⃣ Send email via SendGrid
-    if (!process.env.SENDGRID_API_KEY) {
-      console.error("SENDGRID_API_KEY is not set in environment");
-      return res.status(500).json({ msg: "Email service not configured" });
-    }
-
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
+    // 6️⃣ Send verification email
     const verifyUrl = `${process.env.BACKEND_URL}/api/auth/verify/${token}`;
-    const fromAddress = process.env.EMAIL_FROM || 'no-reply@studyvault.app';
 
-    const msg = {
+    await transporter.sendMail({
+      from: `"StudyVault" <${process.env.EMAIL_USER}>`,
       to: user.email,
-      from: fromAddress,
       subject: "Verify your email address",
       html: `
         <h2>Hello ${user.fullName},</h2>
         <p>Welcome to <b>StudyVault</b>!</p>
         <p>Please verify your email by clicking the link below:</p>
-        <a href="${verifyUrl}" style="color:#6366f1;font-weight:bold;">Verify Email</a>
+        <a href="${verifyUrl}" style="color:#6366f1;font-weight:bold;">
+          Verify Email
+        </a>
         <p>This link will expire in 1 hour.</p>
-      `
-    };
+      `,
+    });
 
-    await sgMail.send(msg);
-
-    res.status(201).json({
-      message: "User registered successfully! Please check your email to verify your account."
+    return res.status(201).json({
+      message:
+        "User registered successfully! Please check your email to verify your account.",
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: "Signup failed", error: err.message || err });
+    console.error("Signup error:", err);
+    return res.status(500).json({
+      msg: "Signup failed",
+      error: err.message || err,
+    });
   }
 };
+
 
 // 🔹 VERIFY EMAIL
 export const verifyEmail = async (req, res) => {
