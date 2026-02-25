@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, LogIn, LogOut } from 'lucide-react';
 import { useNavigate, Link } from "react-router-dom";
-import logo from '../assets/logo.png';
 
 const Navbar = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -150,7 +149,7 @@ const Navbar = () => {
     }
 
     return (
-        <header className="bg-white shadow-sm px-4 md:px-10 py-3 z-50 fixed top-0 left-0 right-0">
+        <header className="bg-white shadow-sm px-4 md:px-10 py-6 z-50 fixed top-0 left-0 right-0">
             <div className="flex justify-between items-center">
                 {/* Logo - Preserved original style */}
                 <Link to="/" className="relative inline-block">
@@ -162,33 +161,6 @@ const Navbar = () => {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6, ease: "easeOut" }}
                     >
-                        <motion.div
-                            className="relative w-12 h-10 flex items-center justify-center"
-                            whileHover={{ rotate: 6 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-400 via-purple-500 to-cyan-400 rounded-xl transform rotate-12 opacity-80 group-hover:opacity-100 transition-all duration-300"></div>
-                            <div className="absolute inset-0.5 bg-black rounded-xl"></div>
-                            <motion.div
-                                className="relative z-10 text-white font-black text-lg"
-                                animate={{
-                                    textShadow: [
-                                        "0 0 5px rgba(99, 102, 241, 0.5)",
-                                        "0 0 10px rgba(139, 92, 246, 0.8)",
-                                        "0 0 5px rgba(99, 102, 241, 0.5)",
-                                    ],
-                                }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                            >
-                                <img src={logo} alt="StudyVault Logo" className="rounded-full" />
-                            </motion.div>
-                            <motion.div
-                                className="absolute inset-0 border-2 border-indigo-400/30 rounded-xl"
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                            />
-                        </motion.div>
-
                         <motion.div
                             className="flex flex-col"
                             initial={{ opacity: 0 }}
@@ -203,7 +175,7 @@ const Navbar = () => {
                                 animate={{ opacity: [0.7, 1, 0.7] }}
                                 transition={{ duration: 3, repeat: Infinity }}
                             >
-                                NerathiX
+                               
                             </motion.span>
                         </motion.div>
                     </motion.div>

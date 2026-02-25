@@ -12,7 +12,7 @@ const Footer = () => {
           </h2>
           <p className="mt-3 text-sm leading-relaxed">
             A student-powered platform by{" "}
-            <span className="font-semibold text-gray-800">NerathiX</span> — 
+            <span className="font-semibold text-gray-800">Harsh Koundal</span> — 
             built to make learning accessible. Upload, share, and download notes, 
             question papers, and study materials all in one place.
           </p>
@@ -76,7 +76,7 @@ const Footer = () => {
 
         {/* About */}
         <div>
-          <h3 className="font-semibold text-gray-800 mb-3">About NerathiX</h3>
+          <h3 className="font-semibold text-gray-800 mb-3">About Us</h3>
           <p className="text-sm">
             We’re a digital innovation agency helping ideas turn into MVPs that matter.
             <br />
@@ -89,8 +89,8 @@ const Footer = () => {
 
       {/* Bottom Bar */}
       <div className="border-t border-gray-200 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between text-sm text-gray-500">
-        <p>© {new Date().getFullYear()} StudyVault by NerathiX. All rights reserved.</p>
-        <p>Built with ❤️ by the NerathiX Team.</p>
+        <p>© {new Date().getFullYear()} StudyVault by Harsh Koundal. All rights reserved.</p>
+        <p>Built with ❤️ by Harsh Koundal.</p>
       </div>
     </footer>
   );

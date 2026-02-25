@@ -159,7 +159,7 @@ const Home = () => {
             <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
               <motion.div whileHover={{ scale: 1.05 }} className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-xl px-6 py-2 rounded-full shadow-lg border border-purple-200 mb-6">
                 <Sparkles className="w-5 h-5 text-purple-500" />
-                <span className="text-purple-600 font-semibold">Powered By NerathiX</span>
+                <span className="text-purple-600 font-semibold">Powered By Harsh Koundal</span>
               </motion.div>
 
               <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight">
