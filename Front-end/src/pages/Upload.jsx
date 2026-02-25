@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 export default function UploadPage() {
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfUrl, setPdfUrl] = useState(null);
+  const [loading , setLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -16,7 +17,9 @@ export default function UploadPage() {
   });
   const navigate = useNavigate();
 
-  const handleUpload = async () => {
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (loading) return;
     if (!pdfFile) return toast.error('Please select a PDF to upload.');
     if (!formData.title || !formData.subject || !formData.materialType)
       return toast.error('Please fill all required fields.');
@@ -35,6 +38,7 @@ export default function UploadPage() {
     data.append('description', formData.description);
 
     try {
+      setLoading(true);
       const res = await axios.post(
         `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/materials/uploads`,
         data,
@@ -60,6 +64,8 @@ export default function UploadPage() {
       } else {
         toast.error('Failed to upload material. Please try again.');
       }
+    }finally{
+      setLoading(false);
     }
   };
 
@@ -70,17 +76,17 @@ export default function UploadPage() {
 
   const processFile = (file) => {
     if (file && file.type === 'application/pdf') {
-      if (file.size > 50 * 1024 * 1024) {
-        alert('File size must be less than 50MB');
-        return;
-      }
+	      if (file.size > 50 * 1024 * 1024) {
+	        toast.error('File size must be less than 50MB');
+	        return;
+	      }
       setPdfFile(file);
       const url = URL.createObjectURL(file);
       setPdfUrl(url);
-    } else {
-      alert('Please upload a PDF file');
-    }
-  };
+	    } else {
+	      toast.error('Please upload a PDF file');
+	    }
+	  };
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -139,6 +145,7 @@ export default function UploadPage() {
         </div>
       </div>
 
+      <form onSubmit={handleUpload}>
       {/* Main Content */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Upload Section */}
@@ -192,10 +199,11 @@ export default function UploadPage() {
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => {
-                      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
-                      setPdfFile(null);
+	                  <button
+	                    type="button"
+	                    onClick={() => {
+	                      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+	                      setPdfFile(null);
                       setPdfUrl(null);
                     }}
                     className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
@@ -233,6 +241,7 @@ export default function UploadPage() {
                 value={formData.title}
                 onChange={handleInputChange}
                 placeholder="e.g., Data Structures Complete Notes"
+                required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
@@ -262,6 +271,7 @@ export default function UploadPage() {
                 name="materialType"
                 value={formData.materialType}
                 onChange={handleInputChange}
+                required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700"
               >
                 <option value="">Select type</option>
@@ -293,10 +303,20 @@ export default function UploadPage() {
 
       {/* Upload Button */}
       <div className="max-w-7xl mx-auto mt-6">
-        <button onClick={handleUpload} className="w-full bg-purple-600 text-white font-semibold py-4 rounded-xl hover:bg-purple-700 transition-colors shadow-lg" >
-          Upload Material
+        <button 
+        type="submit"
+        disabled={loading}
+        className={`w-full text-white font-semibold py-4 rounded-xl transition-colors shadow-lg ${
+          loading
+            ? 'bg-purple-400 cursor-not-allowed'
+            : 'bg-purple-600 hover:bg-purple-700 cursor-pointer'
+        }`}
+        aria-busy={loading}
+        >
+          {loading ? 'Processing...' : 'Upload Material'}
         </button>
       </div>
+      </form>
     </div>
   );
 }

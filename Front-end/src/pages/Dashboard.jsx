@@ -597,7 +597,7 @@ const Dashboard = () => {
   );
 
   const renderProfileSection = () => (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-8xl mx-auto space-y-6">
       <button
         onClick={() => setActiveTab("Dashboard")}
         className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 font-medium transition-colors"
@@ -776,8 +776,8 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 flex gap-6">
+    <div className="min-h-screen bg-gray-50 mt-10">
+      <div className="max-w-8xl mx-auto px-4 md:px-6 py-6 flex gap-6">
         <aside className="hidden lg:block w-64 mt-14">
           <div className="space-y-3">
             {sidebarItems.map((it) => {
