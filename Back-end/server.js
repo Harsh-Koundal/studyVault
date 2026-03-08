@@ -2,8 +2,6 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
-import { fileURLToPath } from 'url';
-import path from 'path';
 
 // Routes
 import authRoutes from './routes/authRoutes.js';
@@ -52,11 +50,11 @@ mongoose.connect(MONGODB_URI, {
     process.exit(1);
   });
 
-// --- Middleware ---
+// Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// --- Routes ---
+// Routes 
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/materials', materialRoutes);
